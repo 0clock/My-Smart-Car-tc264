@@ -7,6 +7,7 @@
 
 enum OLEDPage OLED_Page = Speed_Page;
 uint8 OLED_EN = TRUE;//用于表示OLED屏幕是否开启
+uint8 OLED_Page_Active_Flag = TRUE;//用于表示OLED屏幕是否切换页面
 
 void My_Init_OLED(void)
 {
@@ -19,6 +20,11 @@ void Update_OLED_per16ms(void)
     if (OLED_EN == TRUE)
     {
         //根据OLED应该显示的内容，刷新OLED屏幕
+        if (OLED_Page_Active_Flag == TRUE)
+        {
+            oled_fill(0x00);
+            OLED_Page_Active_Flag = FALSE;
+        }//每次有按键动作就刷屏一下
         switch(OLED_Page)
         {
            case Camera_Page:

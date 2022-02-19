@@ -17,6 +17,7 @@ enum OLEDPage
 
 extern enum OLEDPage OLED_Page;
 extern uint8 OLED_EN;
+extern uint8 OLED_Page_Active_Flag;
 
 void My_Init_OLED(void);
 void Update_OLED_per16ms(void);

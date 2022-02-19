@@ -91,27 +91,22 @@ void Key0_Action(void)
 {
     if (OLED_EN)
     {
-        oled_fill(0x00);
         OLED_Page++;
         if (OLED_Page >= PAGE_NUM)
         {
             OLED_Page = 0;
         }
     }
+    OLED_Page_Active_Flag = TRUE;
 }
 
 void Key1_Action(void)
 {
-    if (OLED_EN)
-    {
-        oled_fill(0x00);
-        My_Init_OLED();//我的初始化OLED
-    }
+    OLED_Page_Active_Flag = TRUE;
 }
 
 void Key2_Action(void)
 {
-    oled_fill(0x00);
     switch (OLED_Page)
     {
         case UART_Setting_Page:
@@ -123,4 +118,5 @@ void Key2_Action(void)
         default:
             break;
     }
+    OLED_Page_Active_Flag = TRUE;
 }
