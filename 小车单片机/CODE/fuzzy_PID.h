@@ -102,8 +102,8 @@ struct PID {
 #define control_mode position_mode
 
 #if control_mode == position_mode
-#define max_error 100.0f //误差e最大值 需要根据实际测量结果更改
-#define max_delta_error 100.0f //误差e的微分的最大值 需要根据实际测量结果更改
+#define max_error 100.0f //误差e最大值 需要根据实际测量结果更改**
+#define max_delta_error 100.0f //误差e的微分的最大值 需要根据实际测量结果更改**
 #else
 #define max_error 12.0f
 #define max_delta_error 12.0f
