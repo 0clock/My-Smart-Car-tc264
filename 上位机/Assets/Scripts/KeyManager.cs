@@ -40,9 +40,9 @@ public class KeyManager : MonoBehaviour
                 whiteBoard.steering_Target += b_Steering;
                 GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
             }
-            if (Input.GetKey(KeyCode.Space))
+            if (Input.GetKey(KeyCode.P))
             {
-                whiteBoard.speed_Target = whiteBoard.speed_Target - a_Speed * whiteBoard.speed_Target / (3 + a_Speed);
+                whiteBoard.speed_Target = whiteBoard.speed_Target/2;
                 GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
             }
 
