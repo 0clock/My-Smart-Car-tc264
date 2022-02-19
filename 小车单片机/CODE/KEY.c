@@ -89,18 +89,24 @@ void Check_Key_per10ms(void)
 
 void Key0_Action(void)
 {
-    oled_fill(0x00);
-    OLED_Page++;
-    if (OLED_Page >= PAGE_NUM)
+    if (OLED_EN)
     {
-        OLED_Page = 0;
+        oled_fill(0x00);
+        OLED_Page++;
+        if (OLED_Page >= PAGE_NUM)
+        {
+            OLED_Page = 0;
+        }
     }
 }
 
 void Key1_Action(void)
 {
-    oled_fill(0x00);
-    My_Init_OLED();//我的初始化OLED
+    if (OLED_EN)
+    {
+        oled_fill(0x00);
+        My_Init_OLED();//我的初始化OLED
+    }
 }
 
 void Key2_Action(void)
