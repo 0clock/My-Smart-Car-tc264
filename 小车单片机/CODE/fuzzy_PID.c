@@ -9,6 +9,7 @@
 
 
 //根据变量个数初始化
+//在 struct PID *raw_fuzzy_pid_init 中已调用，无需手动设置
 struct fuzzy *fuzzy_init(unsigned int input_num, unsigned int output_num) {
     struct fuzzy *fuzzy_struct = (struct fuzzy *) malloc(sizeof(struct fuzzy));
     fuzzy_struct->input_num = input_num;//输入个数
@@ -31,6 +32,7 @@ void delete_fuzzy(struct fuzzy *fuzzy_struct) {
 }
 
 //参数初始化
+//在 struct PID *raw_fuzzy_pid_init 中已调用，无需手动设置
 void fuzzy_params_init(struct fuzzy *fuzzy_struct, unsigned int mf_type, unsigned int fo_type, unsigned int df_type,
                        int mf_params[], int rule_base[][qf_default]) {
 
@@ -119,6 +121,7 @@ float zmf(float x, float a, float b) {
  * x为变量
  * mf_type为隶属度函数类型 在以上6种内选取
  * *params 给定隶属度函数的参数
+ * 默认为三角形隶属度函数 即 mf_type=4
  */
 float mf(float x, unsigned int mf_type, int *params) {
     switch (mf_type) {
@@ -364,6 +367,24 @@ struct PID *raw_fuzzy_pid_init(float kp, float ki, float kd, float integral_limi
     return pid;
 }
 
+
+/*
+ * params[0]:Kp
+ * params[1]:Ki
+ * params[2]:Kd
+ * params[3]:integral_limit （Ki部分上限值） 没有启用，可在.h中取消注释启用 （设为0）
+ * params[4]：dead_zone （输入的下限值，小于下限值时不）没有启用，可在.h中取消注释启用 （设为0）
+ * params[5]：feed_forward 前向反馈 没有时设为0
+ * delta_k：两次测量的间隔
+ * 以上几个参数需自己设定
+ *
+ * 以下几个参数已有
+ * mf_type： 设为4 即三角形隶属度函数
+ * fo_type： 设为1 即并算子
+ * df_type： 设为0 即中心平均值法
+ * mf_params： 隶属度函数的参数 已有成熟的模糊PID参数
+ * rule_base[][qf_default]： 模糊规则 已有成熟的模糊PID参数
+ */
 struct PID *fuzzy_pid_init(float *params, float delta_k, unsigned int mf_type, unsigned int fo_type,
                            unsigned int df_type, int mf_params[], int rule_base[][qf_default]) {
     return raw_fuzzy_pid_init(params[0], params[1], params[2], params[3], params[4], params[5],
@@ -463,7 +484,7 @@ float fuzzy_pid_control(float real, float idea, struct PID *pid) {
     pid->current_error = idea - real;
     float delta_error = pid->current_error - pid->last_error;
 
-#ifdef fuzzy_pid_dead_zone
+#ifdef fuzzy_pid_dead_zone  //没有启用，可在.h中取消注释启用
     if (pid->current_error < pid->dead_zone && pid->current_error > -pid->dead_zone)//误差在设定范围内时约等于0
     {
         pid->current_error = 0;
@@ -505,7 +526,7 @@ float fuzzy_pid_control(float real, float idea, struct PID *pid) {
     //以下部分计算PID结果
     //计算Ki部分的计算结果
     pid->intergral += (pid->ki + pid->delta_ki) * pid->current_error;
-#ifdef fuzzy_pid_integral_limit
+#ifdef fuzzy_pid_integral_limit //对Ki部分乘积做出上限值规定  没有启用，可在.h中取消注释启用
     if (pid->intergral > pid->intergral_limit)
         pid->intergral = pid->intergral_limit;
     else {
