@@ -1,6 +1,7 @@
 #include "headfile.h"
 #include "KEY.h"
 #include "OLED.h"//显示屏相关
+#include "UART.h"
 
 
 void My_Init_Key(void)
@@ -88,22 +89,32 @@ void Check_Key_per10ms(void)
 
 void Key0_Action(void)
 {
-    static uint8 cnt;
     oled_fill(0x00);
-    OLED_PRINTF(0, 0, "Key0's pressed for %d times!", ++cnt);
-
+    OLED_Page++;
+    if (OLED_Page >= PAGE_NUM)
+    {
+        OLED_Page = 0;
+    }
 }
 
 void Key1_Action(void)
 {
-    static uint8 cnt;
     oled_fill(0x00);
-    OLED_PRINTF(0, 2, "Key1's pressed for %d times!", ++cnt);
+    My_Init_OLED();//我的初始化OLED
 }
 
 void Key2_Action(void)
 {
-    static uint8 cnt;
     oled_fill(0x00);
-    OLED_PRINTF(0, 4, "Key2's pressed for %d times!", ++cnt);
+    switch (OLED_Page)
+    {
+        case UART_Setting_Page:
+            UART_EN = UART_EN?FALSE:TRUE;
+            break;
+        case OLED_Setting_Page:
+            OLED_EN = OLED_EN?FALSE:TRUE;
+            break;
+        default:
+            break;
+    }
 }
