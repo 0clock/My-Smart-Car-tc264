@@ -1,0 +1,207 @@
+﻿// 0号kernel
+#pragma kernel Update
+
+// 个体总数量，由cs文件输入
+uint numAgents;
+// TrailMap贴图纹理，由cs文件输入，RW前缀表示可读可写，即外部cs文件可读写
+RWTexture2D<float4> TrailMap;
+RWTexture2D<float4> TrailMap1;
+RWTexture2D<float4> TrailMap2;
+RWTexture2D<float4> TrailMap3;
+
+// 图宽，由cs文件输入
+int width;
+// 图高，由cs文件输入
+int height;
+// 每帧用时，由cs文件输入
+float deltaTime;
+// 总用时，由cs文件输入
+float time;
+
+int width_Choice;
+int width_Inverse_Perspective;
+int height_Inverse_Perspective;
+
+// 哈希函数（ www.cs.ubc.ca/~rbridson/docs/schechter-sca08-turbulence.pdf），输入uint数，输出一个一一对应但几乎随机的uint数
+uint hash(uint state)
+{
+    state ^= 2747636419u;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    return state;
+}
+// 将uint数归一化为0到1
+float scaleToRange01(uint state)
+{
+    return state / 4294967295.0;
+}
+// 设置线程组的分布，这里为(16,1,1)
+[numthreads(16,1,1)]
+// SV_DispatchThreadID是全局的线程坐标，在cs文件里设置了全局的线程坐标的分布方式
+void Update (uint3 id : SV_DispatchThreadID)
+{
+	// id.x即可获得线程的线性坐标
+	if (id.x >= numAgents) {
+		return;
+	}
+	// 每个个体的行为：例如下句把中间点变成权重1（注意float4被当作标量对待，4元素全部都赋1了）
+	//TrailMap[int2((uint)width / 2, (uint)height / 2)] = 1;
+}
+
+
+// 1号kernel
+#pragma kernel Diffuse
+// DiffusedTrailMap贴图纹理，由cs文件输入，RW前缀表示可读可写，即外部cs文件可读写
+RWTexture2D<float4> DiffusedTrailMap;
+RWTexture2D<float4> DiffusedTrailMap1;
+RWTexture2D<float4> DiffusedTrailMap2;
+RWTexture2D<float4> DiffusedTrailMap3;
+
+struct Picture
+{
+	float x, y;
+	float value;
+	float maxvalue;
+};
+// RW前缀表示可读可写，即外部cs文件可读写
+RWStructuredBuffer<Picture> pics;
+
+float thresholdingValue;
+float cameraAlphaUpOrDown;
+float cameraThetaDown;
+float ratioOfMaxDisToHG;
+float ratioOfPixelToHG;
+
+// 设置线程组的分布，这里为(8,8,1)
+[numthreads(8,8,1)]
+// SV_DispatchThreadID是全局的线程坐标，在cs文件里设置了全局的线程坐标的分布方式
+void Diffuse (uint3 id : SV_DispatchThreadID)
+{
+	// id.x和id.y即可获得线程的x、y坐标，id.xy即可获得线程的二维形式坐标
+	if (id.x < 0 || (id.x >= (uint)width && id.x >= (uint)width_Inverse_Perspective) || id.y < 0 || (id.y >= (uint)height) && id.y >= (uint)height_Inverse_Perspective) {
+		return;
+	}
+	// 对TrailMap加工
+	if (width_Choice == 0)
+	{
+		uint index = id.x + ((uint)height - 1 - id.y) * (uint)width;
+		DiffusedTrailMap[id.xy] = pics[index].value / pics[index].maxvalue;
+		DiffusedTrailMap1[id.xy] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;
+		
+		if ((id.x + id.y * (uint)width) >= width_Inverse_Perspective * height_Inverse_Perspective)
+		{
+			return;
+		}
+		uint2 Pos;
+		Pos.x = (id.x + id.y * (uint)width) % (uint)width_Inverse_Perspective;
+		Pos.y = (id.x + id.y * (uint)width) / (uint)width_Inverse_Perspective;		
+		float y_Processed = (float)Pos.y;
+		float y = tan(cameraThetaDown) * ((float)height) / 2 / tan(cameraAlphaUpOrDown) - ((float)height) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
+		int j = round(-y + ((float)height-1) / 2);
+		if (j >= 0 && j < height)
+		{
+			float x_Processed = ((float)Pos.x - ((float)width_Inverse_Perspective - 1) / 2);
+			float x = x_Processed*(((float)height) / 2 / tan(cameraAlphaUpOrDown)*sin(cameraThetaDown) - y*cos(cameraThetaDown))*ratioOfPixelToHG;
+			int i = round(x + ((float)width-1) / 2);
+			if (i >= 0 && i < width)
+			{
+				uint index = i + j * (uint)width;
+				DiffusedTrailMap2[Pos] = pics[index].value / pics[index].maxvalue;
+				DiffusedTrailMap3[Pos] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;
+			}
+			else
+			{
+				DiffusedTrailMap2[Pos] = 0;
+				DiffusedTrailMap3[Pos] = 0;
+			}
+		}
+		else
+		{
+			DiffusedTrailMap2[Pos] = 0;
+			DiffusedTrailMap3[Pos] = 0;
+		}
+	}
+	else if (width_Choice == 1)
+	{
+		float y_Processed = (float)id.y;
+		float y = tan(cameraThetaDown) * ((float)height) / 2 / tan(cameraAlphaUpOrDown) - ((float)height) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
+		int j = round(-y + ((float)height - 1) / 2);
+		if (j >= 0 && j < height)
+		{
+			float x_Processed = ((float)id.x - ((float)width_Inverse_Perspective - 1) / 2);
+			float x = x_Processed * (((float)height) / 2 / tan(cameraAlphaUpOrDown) * sin(cameraThetaDown) - y * cos(cameraThetaDown)) * ratioOfPixelToHG;
+			int i = round(x + ((float)width - 1) / 2);
+			if (i >= 0 && i < width)
+			{
+				uint index = i + j * (uint)width;
+				DiffusedTrailMap2[id.xy] = pics[index].value / pics[index].maxvalue;
+				DiffusedTrailMap3[id.xy] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;
+			}
+			else
+			{
+				DiffusedTrailMap2[id.xy] = 0;
+				DiffusedTrailMap3[id.xy] = 0;
+			}
+		}
+		else
+		{
+			DiffusedTrailMap2[id.xy] = 0;
+			DiffusedTrailMap3[id.xy] = 0;
+		}
+
+		if ((id.x + id.y * (uint)width_Inverse_Perspective) >= width * height)
+		{
+			return;
+		}
+		uint2 Pos;
+		Pos.x = (id.x + id.y * (uint)width_Inverse_Perspective) % (uint)width;
+		Pos.y = (id.x + id.y * (uint)width_Inverse_Perspective) / (uint)width;
+		uint index = Pos.x + ((uint)height - 1 - Pos.y) * (uint)width;
+		DiffusedTrailMap[Pos] = pics[index].value / pics[index].maxvalue;
+		DiffusedTrailMap1[Pos] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;	
+	}
+}
+
+
+// 2号kernel
+#pragma kernel UpdateColourMap
+// ColourMap贴图纹理，由cs文件输入，RW前缀表示可读可写，即外部cs文件可读写
+RWTexture2D<float4> ColourMap;
+RWTexture2D<float4> ColourMap1;
+RWTexture2D<float4> ColourMap2;
+RWTexture2D<float4> ColourMap3;
+// 设置线程组的分布，这里为(8,8,1)
+[numthreads(8,8,1)]
+// SV_DispatchThreadID是全局的线程坐标，在cs文件里设置了全局的线程坐标的分布方式
+void UpdateColourMap (uint3 id : SV_DispatchThreadID)
+{
+	// id.x和id.y即可获得线程的x、y坐标，id.xy即可获得线程的二维形式坐标
+	if (id.x < 0 || (id.x >= (uint)width && id.x >= (uint)width_Inverse_Perspective) || id.y < 0 || (id.y >= (uint)height) && id.y >= (uint)height_Inverse_Perspective) {
+		return;
+	}
+	// 输出颜色图：根据TrailMap的值分布，赋予不同色彩（dot是点积，目的是取4元素中第一个元素）
+	// rgba = 1，1，1，1时是不透明纯白色
+	if (width_Choice == 0)
+	{
+		ColourMap[id.xy] = float4(1, 1, 1, 1) * dot(TrailMap[id.xy], float4(1, 0, 0, 0));
+		ColourMap1[id.xy] = float4(1, 1, 1, 1) * dot(TrailMap1[id.xy], float4(1, 0, 0, 0));
+		uint2 Pos;
+		Pos.x = (id.x + id.y * (uint)width) % (uint)width_Inverse_Perspective;
+		Pos.y = (id.x + id.y * (uint)width) / (uint)width_Inverse_Perspective;
+		ColourMap2[Pos] = float4(1, 1, 1, 1) * dot(TrailMap2[Pos], float4(1, 0, 0, 0));
+		ColourMap3[Pos] = float4(1, 1, 1, 1) * dot(TrailMap3[Pos], float4(1, 0, 0, 0));
+	}
+	else if (width_Choice == 1)
+	{
+		ColourMap2[id.xy] = float4(1, 1, 1, 1) * dot(TrailMap2[id.xy], float4(1, 0, 0, 0));
+		ColourMap3[id.xy] = float4(1, 1, 1, 1) * dot(TrailMap3[id.xy], float4(1, 0, 0, 0));
+		uint2 Pos;
+		Pos.x = (id.x + id.y * (uint)width_Inverse_Perspective) % (uint)width;
+		Pos.y = (id.x + id.y * (uint)width_Inverse_Perspective) / (uint)width;
+		ColourMap[Pos] = float4(1, 1, 1, 1) * dot(TrailMap[Pos], float4(1, 0, 0, 0));
+		ColourMap1[Pos] = float4(1, 1, 1, 1) * dot(TrailMap1[Pos], float4(1, 0, 0, 0));
+	}
+}
