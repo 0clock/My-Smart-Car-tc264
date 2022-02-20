@@ -2,8 +2,8 @@
 #define __MOTOR_h__
 
 #define SPEED_MEASURING_PERIOD_ms 10
-#define SPEED_MAX 3.0
-#define SPEED_MIN -3.0
+#define SPEED_MAX 7.0
+#define SPEED_MIN -7.0
 #define MOTOR_DUTY_MAX 5000
 
 #define OPEN_LOOP 1

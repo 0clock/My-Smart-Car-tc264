@@ -40,7 +40,7 @@ void UART_Speed(void)
     uart_putchar(DEBUG_UART,0x04);
     uart_putchar(DEBUG_UART,0x01);//发送数据头
     uart_putchar(DEBUG_UART, (uint8)round((speed_Measured - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
-    uart_putchar(DEBUG_UART, (uint8)round((speed_Output - (-7.0))/(7.0-(-7.0))*255));
+    uart_putchar(DEBUG_UART, (uint8)round((speed_Output - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART, (uint8)round((speed_Target - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART,0x00);
     uart_putchar(DEBUG_UART,0xff);
@@ -118,17 +118,6 @@ void Get_Speed(void)
 //由speed_Target，speed_Measured得到speed_Output
 void Cal_Speed_Output(uint8 mode)
 {
-    //过速保护，限制在SPEED_MAX到SPEED_MIN内
-    float true_Speed_Target;
-    if (speed_Target > SPEED_MIN && speed_Target < SPEED_MAX)
-    {
-        true_Speed_Target = speed_Target;
-    }
-    else
-    {
-        true_Speed_Target = speed_Target>0?SPEED_MAX:SPEED_MIN;
-    }
-
 
     if (mode == OPEN_LOOP)
     {
@@ -141,7 +130,7 @@ void Cal_Speed_Output(uint8 mode)
         static float speed_Error[3];
         speed_Error[2] = speed_Error[1];
         speed_Error[1] = speed_Error[0];
-        speed_Error[0] = true_Speed_Target - speed_Measured;
+        speed_Error[0] = speed_Target - speed_Measured;
 //        if (speed_Error[0]<0.1 && speed_Error[0]>-0.1)
 //        {
 //            speed_Error[0] = 0;
@@ -155,7 +144,7 @@ void Cal_Speed_Output(uint8 mode)
     }
     else if (mode == FUZZY_PID_CLOSED_LOOP)
     {
-        speed_Output = fuzzy_pid_control(speed_Measured, true_Speed_Target, pid_vector[0]);
+        speed_Output = fuzzy_pid_control(speed_Measured, speed_Target, pid_vector[0]);
     }
 
 }
@@ -165,9 +154,6 @@ void Cal_Speed_Output(uint8 mode)
 void Set_Speed(void)
 {
     uint32 duty;
-    //duty = 34.243speed_Output^2 + 321.79speed_Output + 1339.2
-    //R-Square = 0.9944
-    //duty = 34.243*speed_Output*speed_Output + 321.79*(speed_Output>0?speed_Output:(-speed_Output)) + 1339.2;//空转开环用它
     duty = (speed_Output>0?speed_Output:(-speed_Output))*500 +1500;//地面开环用它
     if (duty>MOTOR_DUTY_MAX)//保护电机
     {
