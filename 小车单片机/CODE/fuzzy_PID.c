@@ -6,6 +6,69 @@
 // 隶属度函数(mf) Membership function
 // 模糊算子(fo) Fuzzy operator
 
+struct PID **pid_vector;
+
+void My_Init_FuzzyPID_Speed(void)
+{
+    int rule_base[][qf_default] = {
+                //delta kp rule base
+                {PB, PB, PM, PM, PS, ZO, ZO},
+                {PB, PB, PM, PS, PS, ZO, NS},
+                {PM, PM, PM, PS, ZO, NS, NS},
+                {PM, PM, PS, ZO, NS, NM, NM},
+                {PS, PS, ZO, NS, NS, NM, NM},
+                {PS, ZO, NS, NM, NM, NM, NB},
+                {ZO, ZO, NM, NM, NM, NB, NB},
+                //delta ki rule base
+                {NB, NB, NM, NM, NS, ZO, ZO},
+                {NB, NB, NM, NS, NS, ZO, ZO},
+                {NB, NM, NS, NS, ZO, PS, PS},
+                {NM, NM, NS, ZO, PS, PM, PM},
+                {NM, NS, ZO, PS, PS, PM, PB},
+                {ZO, ZO, PS, PS, PM, PB, PB},
+                {ZO, ZO, PS, PM, PM, PB, PB},
+                //delta kd rule base
+                {PS, NS, NB, NB, NB, NM, PS},
+                {PS, NS, NB, NM, NM, NS, ZO},
+                {ZO, NS, NM, NM, NS, NS, ZO},
+                {ZO, NS, NS, NS, NS, NS, ZO},
+                {ZO, ZO, ZO, ZO, ZO, ZO, ZO},
+                {PB, PS, PS, PS, PS, PS, PB},
+                {PB, PM, PM, PM, PS, PS, PB}};
+
+    // Default parameters of membership function
+    int mf_params[4 * qf_default] = {-3, -3, -2, 0,
+                                     -3, -2, -1, 0,
+                                     -2, -1,  0, 0,
+                                     -1,  0,  1, 0,
+                                      0,  1,  2, 0,
+                                      1,  2,  3, 0,
+                                      2,  3,  3, 0};
+    
+    /*
+     * params[0]:Kp
+     * params[1]:Ki
+     * params[2]:Kd
+     * params[3]:integral_limit （Ki部分上限值） 没有启用，可在.h中取消注释启用 （设为0）
+     * params[4]：dead_zone （输入的下限值，小于下限值时不）没有启用，可在.h中取消注释启用 （设为0）
+     * params[5]：feed_forward 前向反馈 设为1
+     * delta_k：两次测量的间隔
+     * 以上几个参数需自己设定
+     *
+     * 以下几个参数已有
+     * mf_type： 设为4 即三角形隶属度函数
+     * fo_type： 设为1 即并算子
+     * df_type： 设为0 即中心平均值法
+     * mf_params： 隶属度函数的参数 已有成熟的模糊PID参数
+     * rule_base[][qf_default]： 模糊规则 已有成熟的模糊PID参数
+     */
+    float fuzzy_pid_params[1][pid_params_count] = {{25.4597502f,  10.0053997f,    15.59500027f, 0, 0, 0, 1}};
+
+    struct PID **subpid_vector = fuzzy_pid_vector_init(fuzzy_pid_params, 4.0f, 4, 1, 0, mf_params, rule_base, 1);
+
+    pid_vector=subpid_vector;
+    
+}
 
 
 //根据变量个数初始化
