@@ -62,7 +62,7 @@ void My_Init_FuzzyPID_Speed(void)
      * mf_params： 隶属度函数的参数 已有成熟的模糊PID参数
      * rule_base[][qf_default]： 模糊规则 已有成熟的模糊PID参数
      */
-    float fuzzy_pid_params[1][pid_params_count] = {{25.4597502f,  10.0053997f,    15.59500027f, 0, 0, 0, 1}};
+    float fuzzy_pid_params[1][pid_params_count] = {{290.f,  1500.f, 65.f, 0, 0, 0, 1}};
 
     struct PID **subpid_vector = fuzzy_pid_vector_init(fuzzy_pid_params, 4.0f, 4, 1, 0, mf_params, rule_base, 1);
 

@@ -8,6 +8,7 @@
 
 #define OPEN_LOOP 1
 #define PID_CLOSED_LOOP 2
+#define FUZZY_PID_CLOSED_LOOP 3
 
 extern float speed_Measured;
 extern float speed_Target;
