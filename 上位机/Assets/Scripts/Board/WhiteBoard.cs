@@ -74,7 +74,8 @@ public class WhiteBoard : MonoBehaviour
     public int width_Inverse_Perspective;
     public int height_Inverse_Perspective;
 
-    float speed_Measured = 0; 
+    float speed_Measured = 0;
+    float speed_Output = 0;
     public float speed_Target = 0;
 
     public float steering_Target = 0;
@@ -85,6 +86,8 @@ public class WhiteBoard : MonoBehaviour
     public bool key_Control = true;
 
     string timeString = DateTime.Now.ToString("hh-mm-ss");
+
+    int kp, ki, kd;
 
 
     // 启动函数，只会运行一次
@@ -211,6 +214,8 @@ public class WhiteBoard : MonoBehaviour
 
         GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value = speed_Measured;//将Slider的值赋值为speed_Measured
         GameObject.Find("UI/Canvas/Text (9)/InputField").GetComponent<InputField>().text = speed_Measured.ToString();
+        GameObject.Find("UI/Canvas/Text (15)/Slider").GetComponent<Slider>().value = speed_Output;//将Slider的值赋值为speed_Output
+        GameObject.Find("UI/Canvas/Text (15)/InputField").GetComponent<InputField>().text = speed_Output.ToString();
         GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = speed_Target;//将Slider的值赋值为speed_Target
         GameObject.Find("UI/Canvas/Text (10)/InputField").GetComponent<InputField>().text = speed_Target.ToString();
 
@@ -221,6 +226,12 @@ public class WhiteBoard : MonoBehaviour
 
         GameObject.Find("UI/Canvas/Toggle (1)").GetComponent<Toggle>().isOn = key_Control;
 
+        GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value = kp;//将Slider的值赋值为kp
+        GameObject.Find("UI/Canvas/Text (12)/InputField").GetComponent<InputField>().text = kp.ToString();
+        GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value = ki;//将Slider的值赋值为ki
+        GameObject.Find("UI/Canvas/Text (13)/InputField").GetComponent<InputField>().text = ki.ToString();
+        GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value = kd;//将Slider的值赋值为kd
+        GameObject.Find("UI/Canvas/Text (14)/InputField").GetComponent<InputField>().text = kd.ToString();
     }
 
     // 循环函数，会反复运行
@@ -342,6 +353,8 @@ public class WhiteBoard : MonoBehaviour
 
         speed_Measured = GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (9)/InputField").GetComponent<InputField>().text = speed_Measured.ToString();
+        speed_Output = GameObject.Find("UI/Canvas/Text (15)/Slider").GetComponent<Slider>().value;
+        GameObject.Find("UI/Canvas/Text (15)/InputField").GetComponent<InputField>().text = speed_Output.ToString();
         speed_Target = GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (10)/InputField").GetComponent<InputField>().text = speed_Target.ToString();
 
@@ -351,6 +364,14 @@ public class WhiteBoard : MonoBehaviour
 
 
         key_Control = GameObject.Find("UI/Canvas/Toggle (1)").GetComponent<Toggle>().isOn;
+
+        kp = (int)GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value;
+        GameObject.Find("UI/Canvas/Text (12)/InputField").GetComponent<InputField>().text = kp.ToString();
+        ki = (int)GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value;
+        GameObject.Find("UI/Canvas/Text (13)/InputField").GetComponent<InputField>().text = ki.ToString();
+        kd = (int)GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value;
+        GameObject.Find("UI/Canvas/Text (14)/InputField").GetComponent<InputField>().text = kd.ToString();
+
         //...
 
 
@@ -482,18 +503,21 @@ public class WhiteBoard : MonoBehaviour
                     compute.SetFloat("ratioOfPixelToHG", ratioOfPixelToHG);//更新Compute Shader
                 }
             }
-            //接收速度参数，数据头00-FF-04-01，数据长度2字节，数据尾00-FF-04-02
+            //接收速度参数，数据头00-FF-04-01，数据长度3字节，数据尾00-FF-04-02
             index1 = str.IndexOf("00-FF-04-01") / 3;//找到第一个数据头
             if (index1 != -1)
             {
                 index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-04-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
-                if (index2 == 4 + 2)//检测两个数据头之间是否有正确的字节数目
+                if (index2 == 4 + 3)//检测两个数据头之间是否有正确的字节数目
                 {
                     int value = byteArray[index1 + 4];
-                    GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value = (float)value / 256 * (3-(-3))+(-3);
-                    speed_Measured = (float)value / 256 * (3 - (-3)) + (-3);//更新Slider的值，赋值
+                    GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value = (float)value / 256 * (7-(-7))+(-7);
+                    speed_Measured = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
 
-                    
+                    value = byteArray[index1 + 5];
+                    GameObject.Find("UI/Canvas/Text (15)/Slider").GetComponent<Slider>().value = (float)value / 256 * (7 - (-7)) + (-7);
+                    speed_Output = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
+
                     string path = @"D:\CarData\" + timeString + @" Others\";
                     if (!Directory.Exists(path))
                     {
@@ -505,11 +529,23 @@ public class WhiteBoard : MonoBehaviour
                     fs.Flush();
                     fs.Close();
 
+                    fs = new FileStream(path + "speed_Output.txt", FileMode.Append);
+                    data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + speed_Output.ToString() + "\r\n");
+                    fs.Write(data, 0, data.Length);
+                    fs.Flush();
+                    fs.Close();
+
+                    fs = new FileStream(path + "steering_Target.txt", FileMode.Append);
+                    data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + steering_Target.ToString() + "\r\n");
+                    fs.Write(data, 0, data.Length);
+                    fs.Flush();
+                    fs.Close();
+
                     if (reading_Flag == true)
                     {
-                        value = byteArray[index1 + 5];
-                        GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = (float)value / 256 * (3 - (-3)) + (-3);
-                        speed_Target = (float)value / 256 * (3 - (-3)) + (-3);//更新Slider的值，赋值
+                        value = byteArray[index1 + 6];
+                        GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = (float)value / 256 * (7 - (-7)) + (-7);
+                        speed_Target = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
                     }
 
 
@@ -525,6 +561,50 @@ public class WhiteBoard : MonoBehaviour
                     int value = byteArray[index1 + 4];
                     GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = (float)value / 256 * (30 - (-30)) + (-30);
                     steering_Target = (float)value / 256 * (30 - (-30)) + (-30);//更新Slider的值，赋值为二值化阈值
+                }
+            }
+            //接收模糊pid参数，数据头00-FF-06-01，数据长度6字节，数据尾00-FF-06-02
+            index1 = str.IndexOf("00-FF-06-01") / 3;//找到第一个数据头
+            if (index1 != -1)
+            {
+                index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-06-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
+                if (index2 == 4 + 6)//检测两个数据头之间是否有正确的字节数目
+                {
+                    int value = byteArray[index1 + 4]*256+ byteArray[index1 + 5];
+                    if (value > 32767)
+                    {
+                        value = value - 65536;
+                    }
+                    GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value = value;
+                    kp = value;//更新Slider的值，赋值
+
+                    value = byteArray[index1 + 6] * 256 + byteArray[index1 + 7];
+                    if (value > 32767)
+                    {
+                        value = value - 65536;
+                    }
+                    GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value = value;
+                    ki = value;//更新Slider的值，赋值
+
+                    value = byteArray[index1 + 8] * 256 + byteArray[index1 + 9];
+                    if (value > 32767)
+                    {
+                        value = value - 65536;
+                    }
+                    GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value = value;
+                    kd = value;//更新Slider的值，赋值
+
+                    string path = @"D:\CarData\" + timeString + @" Others\";
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    FileStream fs = new FileStream(path + "fuzzy_PID.txt", FileMode.Append);
+                    byte[] data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + kp.ToString()+ "," + ki.ToString()+ "," + kd.ToString() + "\r\n");
+                    fs.Write(data, 0, data.Length);
+                    fs.Flush();
+                    fs.Close();
+
                 }
             }
             //...

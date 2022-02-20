@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class KeyManager : MonoBehaviour
 {
     public WhiteBoard whiteBoard;
-    float a_Speed = 0.05F;
+    float a_Speed = 1F;
     float b_Steering = 5F;
 
     // Start is called before the first frame update
@@ -46,7 +46,7 @@ public class KeyManager : MonoBehaviour
                 GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
             }
 
-            whiteBoard.speed_Target = whiteBoard.speed_Target - a_Speed * whiteBoard.speed_Target / (3 + a_Speed);
+            whiteBoard.speed_Target = whiteBoard.speed_Target - a_Speed * whiteBoard.speed_Target / (7 + a_Speed);
             GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
             whiteBoard.steering_Target = whiteBoard.steering_Target - b_Steering * whiteBoard.steering_Target / (30 + b_Steering);
             GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
