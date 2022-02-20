@@ -78,6 +78,8 @@ struct PID {
     struct fuzzy *fuzzy_struct;
 };
 
+extern struct PID **pid_vector;
+
 #define NB -3
 #define NM -2
 #define NS -1
@@ -113,6 +115,7 @@ struct PID {
 #define middle_pwm_output 500
 #define max_pwm_output 1000
 
+void My_Init_FuzzyPID_Speed(void);
 struct fuzzy *fuzzy_init(unsigned int input_num, unsigned int output_num);
 
 void fuzzy_params_init(struct fuzzy *fuzzy_struct, unsigned int mf_type, unsigned int fo_type, unsigned int df_type,
