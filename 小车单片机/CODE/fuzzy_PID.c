@@ -62,9 +62,9 @@ void My_Init_FuzzyPID_Speed(void)
      * mf_params： 隶属度函数的参数 已有成熟的模糊PID参数
      * rule_base[][qf_default]： 模糊规则 已有成熟的模糊PID参数
      */
-    float fuzzy_pid_params[1][pid_params_count] = {{290.f,  1500.f, 65.f, 0, 0, 0, 1}};
+    float fuzzy_pid_params[1][pid_params_count_full] = {{290.f,  1500.f, 65.f, 0, 0, 0, 290.f, 1500.f, 65.f}};
 
-    struct PID **subpid_vector = fuzzy_pid_vector_init(fuzzy_pid_params, 4.0f, 4, 1, 0, mf_params, rule_base, 1);
+    struct PID **subpid_vector = fuzzy_pid_vector_init_full(fuzzy_pid_params, 4.0f, 4, 1, 0, mf_params, rule_base, 1);
 
     pid_vector=subpid_vector;
     
@@ -438,7 +438,7 @@ struct PID *raw_fuzzy_pid_init(float kp, float ki, float kd, float integral_limi
  * params[3]:integral_limit （Ki部分上限值） 没有启用，可在.h中取消注释启用 （设为0）
  * params[4]：dead_zone （输入的下限值，小于下限值时不）没有启用，可在.h中取消注释启用 （设为0）
  * params[5]：feed_forward 前向反馈 没有时设为0
- * delta_k：两次测量的间隔
+ * delta_k：
  * 以上几个参数需自己设定
  *
  * 以下几个参数已有
@@ -456,6 +456,13 @@ struct PID *fuzzy_pid_init(float *params, float delta_k, unsigned int mf_type, u
                               rule_base, min_pwm_output, middle_pwm_output, max_pwm_output);
 }
 
+struct PID *fuzzy_pid_init_full(float *params, float delta_k, unsigned int mf_type, unsigned int fo_type,
+                           unsigned int df_type, int mf_params[], int rule_base[][qf_default]) {
+    return raw_fuzzy_pid_init(params[0], params[1], params[2], params[3], params[4], params[5],
+                              max_error,max_delta_error, params[6], params[7], params[8] , mf_type,
+                              fo_type, df_type, mf_params,
+                              rule_base, min_pwm_output, middle_pwm_output, max_pwm_output);
+}
 
 
 //以下两函数用于完成pid初始化
@@ -694,6 +701,16 @@ fuzzy_pid_vector_init(float params[][pid_params_count], float delta_k, unsigned 
     return pid;
 }
 
+struct PID **
+fuzzy_pid_vector_init_full(float params[][pid_params_count_full], float delta_k, unsigned int mf_type, unsigned int fo_type,
+                      unsigned int df_type, int *mf_params, int rule_base[][qf_default],
+                      unsigned int count) {
+    struct PID **pid = (struct PID **) malloc(sizeof(struct PID *) * count);
+    for (unsigned int i = 0; i < count; ++i) {
+        pid[i] = fuzzy_pid_init_full(params[i], delta_k, mf_type, fo_type, df_type, mf_params, rule_base);
+    }
+    return pid;
+}
 
 
 

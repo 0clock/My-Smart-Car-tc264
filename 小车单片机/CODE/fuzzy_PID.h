@@ -98,6 +98,7 @@ extern struct PID **pid_vector;
 //#define fuzzy_pid_rule_base_deep_copy
 
 #define pid_params_count 7
+#define pid_params_count_full 9
 
 #define torque_mode 1
 #define position_mode 2
@@ -143,6 +144,10 @@ struct PID **pid_vector_init(float params[][pid_params_count], unsigned int coun
 
 struct PID **
 fuzzy_pid_vector_init(float params[][pid_params_count], float delta_k, unsigned int mf_type, unsigned int fo_type,
+                      unsigned int df_type, int *mf_params, int rule_base[][qf_default],
+                      unsigned int count);
+struct PID **
+fuzzy_pid_vector_init_full(float params[][pid_params_count_full], float delta_k, unsigned int mf_type, unsigned int fo_type,
                       unsigned int df_type, int *mf_params, int rule_base[][qf_default],
                       unsigned int count);
 
