@@ -13,9 +13,9 @@ float speed_Measured = 0;//测量速度（m/s）
 
 //需要串口通信传过来的变量（必须配以执行变量更新的函数）
 float speed_Target = 0;//目标速度（m/s），更新函数Set_Speed_Target(uint8 val)
-float PID_KP=24;
-float PID_TI=0.2;
-float PID_TD=0.05;
+float PID_KP=289;
+float PID_KI=94;
+float PID_KD=65;
 
 //其他变量
 float speed_Output = 0;//输出速度（m/s）
@@ -122,7 +122,7 @@ void Cal_Speed_Output(uint8 mode)
         if (flag == 0)
         {
             flag++;
-            float delta_Speed = PID_KP*(speed_Error[0]-speed_Error[1]) + PID_KP*(1.0*SPEED_MEASURING_PERIOD_ms/1000.0)/PID_TI*speed_Error[0] + PID_KP*PID_TD/(1.0*SPEED_MEASURING_PERIOD_ms/1000.0)*(speed_Error[0]-2*speed_Error[1]+speed_Error[2]);
+            float delta_Speed = PID_KP*(speed_Error[0]-speed_Error[1]) + PID_KI*speed_Error[0] + PID_KD*(speed_Error[0]-2*speed_Error[1]+speed_Error[2]);
             speed_Output = speed_Output + delta_Speed;
         }
     }

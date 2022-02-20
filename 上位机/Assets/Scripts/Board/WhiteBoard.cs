@@ -84,6 +84,8 @@ public class WhiteBoard : MonoBehaviour
 
     public bool key_Control = true;
 
+    string timeString = DateTime.Now.ToString("hh-mm-ss");
+
 
     // 启动函数，只会运行一次
     protected virtual void Start()
@@ -417,7 +419,24 @@ public class WhiteBoard : MonoBehaviour
                     }//将数据赋给图片一维数组
                     ComputeHelper.CreateStructuredBuffer(ref picsBuffer, pics);
                     compute.SetBuffer(diffuseMapKernel, "pics", picsBuffer);//传入Compute Shader
-                
+
+                    
+                    string path = @"D:\CarData\" + timeString + @" Images\";
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+".pgm", FileMode.Create);
+                    byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"128 64\n"+"255\n");
+                    byte[] data2 = new byte[width * height];
+                    for (int i = 0; i < width * height; i++)
+                    {
+                        data2[i] = byteArray[i + index1 + 4];
+                    }
+                    fs.Write(data1, 0, data1.Length);
+                    fs.Write(data2, 0, data2.Length);
+                    fs.Flush();
+                    fs.Close();
                 }
             }
 
@@ -474,7 +493,13 @@ public class WhiteBoard : MonoBehaviour
                     GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value = (float)value / 256 * (3-(-3))+(-3);
                     speed_Measured = (float)value / 256 * (3 - (-3)) + (-3);//更新Slider的值，赋值
 
-                    FileStream fs = new FileStream(@"D:\speed_Measured.txt", FileMode.Append);
+                    
+                    string path = @"D:\CarData\" + timeString + @" Others\";
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    FileStream fs = new FileStream(path + "speed_Measured.txt", FileMode.Append);
                     byte[] data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString()+","+ speed_Measured.ToString() + "\r\n");
                     fs.Write(data, 0, data.Length);
                     fs.Flush();
