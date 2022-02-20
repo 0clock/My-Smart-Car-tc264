@@ -62,7 +62,7 @@ void My_Init_FuzzyPID_Speed(void)
      * mf_params： 隶属度函数的参数 已有成熟的模糊PID参数
      * rule_base[][qf_default]： 模糊规则 已有成熟的模糊PID参数
      */
-    float fuzzy_pid_params[1][pid_params_count_full] = {{290.f,  1500.f, 65.f, 0, 0, 0, 290.f, 1500.f, 65.f}};
+    float fuzzy_pid_params[1][pid_params_count_full] = {{211.f,  1494.f, 0.925f, 0, 0, 0, 211.f, 1494.f, 0.925f}};
 
     struct PID **subpid_vector = fuzzy_pid_vector_init_full(fuzzy_pid_params, 4.0f, 4, 1, 0, mf_params, rule_base, 1);
 
@@ -577,7 +577,7 @@ float fuzzy_pid_control(float real, float idea, struct PID *pid) {
                   pid->fuzzy_struct);
 
     //（由 模糊pid得到的输出 除以系数3归一化  再乘最大值得到实际值）+加上原kp
-    pid->delta_kp = pid->fuzzy_struct->output[0] / 3.0f * pid->delta_kp_max + pid->kp;
+    pid->delta_kp = pid->fuzzy_struct->output[0] / 3.0f * pid->delta_kp_max;
 
     //输出个数大于1时 即有Ki时 继续输出
     if (pid->fuzzy_struct->output_num >= 2)

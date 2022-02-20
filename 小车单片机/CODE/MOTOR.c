@@ -13,13 +13,13 @@ float speed_Measured = 0;//测量速度（m/s）
 
 //需要串口通信传过来的变量（必须配以执行变量更新的函数）
 float speed_Target = 0;//目标速度（m/s），更新函数Set_Speed_Target(uint8 val)
-float PID_KP=289;
-float PID_KI=94;
-float PID_KD=65;
+
 
 //其他变量
 float speed_Output = 0;//输出速度（m/s）
-
+float PID_KP=289;
+float PID_KI=0.94;
+float PID_KD=6500;
 
 void My_Init_Motor(void)
 {
@@ -40,6 +40,7 @@ void UART_Speed(void)
     uart_putchar(DEBUG_UART,0x04);
     uart_putchar(DEBUG_UART,0x01);//发送数据头
     uart_putchar(DEBUG_UART, (uint8)round((speed_Measured - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
+    uart_putchar(DEBUG_UART, (uint8)round((speed_Output - (-7.0))/(7.0-(-7.0))*255));
     uart_putchar(DEBUG_UART, (uint8)round((speed_Target - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART,0x00);
     uart_putchar(DEBUG_UART,0xff);
@@ -50,6 +51,28 @@ void UART_Speed(void)
 void Set_Speed_Target(uint8 val)
 {
     speed_Target = ((float)val) / 256 * (SPEED_MAX-SPEED_MIN)+SPEED_MIN;//因为速度范围是对称的，而255不对称，所以接收时用256
+}
+
+void UART_FuzzyPID(void)
+{
+    uart_putchar(DEBUG_UART,0x00);
+    uart_putchar(DEBUG_UART,0xff);
+    uart_putchar(DEBUG_UART,0x06);
+    uart_putchar(DEBUG_UART,0x01);//发送数据头
+    int16 kp = (int16)round(pid_vector[0]->kp+pid_vector[0]->delta_kp);
+    int16 ki = (int16)round(pid_vector[0]->ki+pid_vector[0]->delta_ki);
+    int16 kd = (int16)round(pid_vector[0]->kd+pid_vector[0]->delta_kd);
+
+    uart_putchar(DEBUG_UART, kp>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kp&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, ki>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, ki&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kd>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kd&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART,0x00);
+    uart_putchar(DEBUG_UART,0xff);
+    uart_putchar(DEBUG_UART,0x06);
+    uart_putchar(DEBUG_UART,0x02);//发送数据尾
 }
 
 void Get_Speed_perSPEED_MEASURING_PERIOD_ms(void)
@@ -109,7 +132,7 @@ void Cal_Speed_Output(uint8 mode)
 
     if (mode == OPEN_LOOP)
     {
-        speed_Output = true_Speed_Target;
+        speed_Output = speed_Target;
     }
     else if (mode == PID_CLOSED_LOOP)
     {
@@ -119,6 +142,10 @@ void Cal_Speed_Output(uint8 mode)
         speed_Error[2] = speed_Error[1];
         speed_Error[1] = speed_Error[0];
         speed_Error[0] = true_Speed_Target - speed_Measured;
+//        if (speed_Error[0]<0.1 && speed_Error[0]>-0.1)
+//        {
+//            speed_Error[0] = 0;
+//        }//带死区的增量式pid
         if (flag == 0)
         {
             flag++;

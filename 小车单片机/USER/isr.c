@@ -53,7 +53,7 @@ IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
 
 	//由速度、转向角度的目标值，通过PID等算法，改变直流电机和舵机的状态
 	Get_Speed_perSPEED_MEASURING_PERIOD_ms();
-	Cal_Speed_Output(PID_CLOSED_LOOP);
+	Cal_Speed_Output(OPEN_LOOP);
 	Set_Speed();
 	Set_Steering();
 }

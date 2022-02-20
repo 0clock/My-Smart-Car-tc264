@@ -4,6 +4,7 @@
 #include "MOTOR.h"
 #include "STEERING.h"
 #include "CAMERA.h"
+#include "fuzzy_PID.h"//模糊PID算法
 
 uint8 data_Buffer[RECEIVE_LENGTH + CACHE_LENGTH];//接收缓冲区，等于所有命令长度的2倍时最好
 uint8 *dat = data_Buffer;//接收缓冲区的指针
@@ -37,11 +38,14 @@ void UART(enum UARTstate state)
             //发送逆透视参数，数据头00-FF-03-01，数据长度4字节，数据尾00-FF-03-02
             UART_Inverse_Perspective();
 
-            //发送直流电机速度参数，数据头00-FF-04-01，数据长度2字节，数据尾00-FF-04-02
+            //发送直流电机速度参数，数据头00-FF-04-01，数据长度3字节，数据尾00-FF-04-02
             UART_Speed();
 
             //发送舵机角度参数，数据头00-FF-05-01，数据长度1字节，数据尾00-FF-05-02
             UART_Steering();
+
+            //发送模糊PID参数，数据头00-FF-06-01，数据长度6字节，数据尾00-FF-06-02
+            UART_FuzzyPID();
 
             UART_Flag_TX = FALSE;
         }
