@@ -2,6 +2,7 @@
 #include "MOTOR.h"
 #include "IfxGpt12_reg.h"
 #include "IfxGpt12.h"
+#include "fuzzy_PID.h"//Ä£ºýPIDËã·¨
 
 
 
@@ -105,6 +106,7 @@ void Cal_Speed_Output(uint8 mode)
         true_Speed_Target = speed_Target>0?SPEED_MAX:SPEED_MIN;
     }
 
+
     if (mode == OPEN_LOOP)
     {
         speed_Output = true_Speed_Target;
@@ -124,6 +126,11 @@ void Cal_Speed_Output(uint8 mode)
             speed_Output = speed_Output + delta_Speed;
         }
     }
+    else if (mode == FUZZY_PID_CLOSED_LOOP)
+    {
+        speed_Output = fuzzy_pid_control(speed_Measured, true_Speed_Target, pid_vector[0]);
+    }
+
 }
 
 
