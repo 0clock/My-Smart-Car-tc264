@@ -1,7 +1,7 @@
 #ifndef __UART_h__
 #define __UART_h__
 
-#define RECEIVE_LENGTH ((4+1+4 + 4+1+4 + 4+4+4 + 4+1+4 + 4+1+4)*2)
+#define RECEIVE_LENGTH ((4+1+4 + 4+1+4 + 4+4+4 + 4+1+4 + 4+1+4 + 4+6+4)*2)
 #define CACHE_LENGTH 0
 
 enum UARTstate

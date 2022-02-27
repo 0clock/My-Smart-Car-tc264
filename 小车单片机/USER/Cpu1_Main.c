@@ -51,11 +51,10 @@ void core1_main(void)
         //来自摄像机的图像到达后，进行图像处理
         if (mt9v03x_finish_flag == 1 && (UART_Flag_TX == FALSE || UART_EN == FALSE))
         {
-            Get_Cutted_Image();//裁剪图像到128x64
+            Get_Cutted_Image();//裁剪图像到188*40
             mt9v03x_finish_flag = 0;//表示可以更新mt9v03x_image了
             if (UART_EN == TRUE)
             {
-                //compressed_Size = fastlz_compress_level(1, *mt9v03x_image_cutted, X_WIDTH*Y_WIDTH, *mt9v03x_image_cutted_compressed);//压缩
                 UART_Flag_TX = TRUE;
             }
             Get_Thresholding_Image();
@@ -64,6 +63,15 @@ void core1_main(void)
 
         //由处理后的图像等信息，获取速度、转向角度的目标值
 
+        //低速目标且低速时，开环
+        if (speed_Target < 0.5 && speed_Target > -0.5 && speed_Measured < 0.5 && speed_Measured > -0.5)
+        {
+            PID_mode = OPEN_LOOP;
+        }
+        else
+        {
+            PID_mode = PID_CLOSED_LOOP;
+        }
 
 
 

@@ -17,9 +17,11 @@ float speed_Target = 0;//目标速度（m/s），更新函数Set_Speed_Target(uint8 val)
 
 //其他变量
 float speed_Output = 0;//输出速度（m/s）
-float PID_KP=289;
-float PID_KI=0.94;
-float PID_KD=6500;
+float PID_KP=7.0f/0.5f;//7.0f/3.0f;
+float PID_KI=0.04f;//0.01f;
+float PID_KD=0.0f;
+
+enum PID_Mode PID_mode = PID_CLOSED_LOOP;//PID模式选择
 
 void My_Init_Motor(void)
 {
@@ -42,6 +44,8 @@ void UART_Speed(void)
     uart_putchar(DEBUG_UART, (uint8)round((speed_Measured - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART, (uint8)round((speed_Output - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART, (uint8)round((speed_Target - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
+    uart_putchar(DEBUG_UART, (uint8)round((pid_vector[0]->last_error - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
+    uart_putchar(DEBUG_UART, (uint8)round((pid_vector[0]->current_error - SPEED_MIN)/(SPEED_MAX-SPEED_MIN)*255));
     uart_putchar(DEBUG_UART,0x00);
     uart_putchar(DEBUG_UART,0xff);
     uart_putchar(DEBUG_UART,0x04);
@@ -59,10 +63,9 @@ void UART_FuzzyPID(void)
     uart_putchar(DEBUG_UART,0xff);
     uart_putchar(DEBUG_UART,0x06);
     uart_putchar(DEBUG_UART,0x01);//发送数据头
-    int16 kp = (int16)round(pid_vector[0]->kp+pid_vector[0]->delta_kp);
-    int16 ki = (int16)round(pid_vector[0]->ki+pid_vector[0]->delta_ki);
-    int16 kd = (int16)round(pid_vector[0]->kd+pid_vector[0]->delta_kd);
-
+    int16 kp = (int16)round(10000*(pid_vector[0]->kp+pid_vector[0]->delta_kp));
+    int16 ki = (int16)round(10000*(pid_vector[0]->ki+pid_vector[0]->delta_ki));
+    int16 kd = (int16)round(10000*(pid_vector[0]->kd+pid_vector[0]->delta_kd));
     uart_putchar(DEBUG_UART, kp>>8);//先传高8位，再传低8位
     uart_putchar(DEBUG_UART, kp&0x00FF);//先传高8位，再传低8位
     uart_putchar(DEBUG_UART, ki>>8);//先传高8位，再传低8位
@@ -73,6 +76,34 @@ void UART_FuzzyPID(void)
     uart_putchar(DEBUG_UART,0xff);
     uart_putchar(DEBUG_UART,0x06);
     uart_putchar(DEBUG_UART,0x02);//发送数据尾
+}
+
+void UART_PID(void)
+{
+    uart_putchar(DEBUG_UART,0x00);
+    uart_putchar(DEBUG_UART,0xff);
+    uart_putchar(DEBUG_UART,0x07);
+    uart_putchar(DEBUG_UART,0x01);//发送数据头
+    int16 kp = (int16)round(1000*PID_KP);
+    int16 ki = (int16)round(1000*PID_KI);
+    int16 kd = (int16)round(1000*PID_KD);
+    uart_putchar(DEBUG_UART, kp>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kp&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, ki>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, ki&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kd>>8);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART, kd&0x00FF);//先传高8位，再传低8位
+    uart_putchar(DEBUG_UART,0x00);
+    uart_putchar(DEBUG_UART,0xff);
+    uart_putchar(DEBUG_UART,0x07);
+    uart_putchar(DEBUG_UART,0x02);//发送数据尾
+}
+
+void Set_PID(uint8 v1, uint8 v2, uint8 v3, uint8 v4, uint8 v5, uint8 v6)
+{
+    PID_KP = (v1*256.0f+v2)/1000.0f;
+    PID_KI = (v3*256.0f+v4)/1000.0f;
+    PID_KD = (v5*256.0f+v6)/1000.0f;
 }
 
 void Get_Speed_perSPEED_MEASURING_PERIOD_ms(void)
@@ -116,14 +147,14 @@ void Get_Speed(void)
 
 
 //由speed_Target，speed_Measured得到speed_Output
-void Cal_Speed_Output(uint8 mode)
+void Cal_Speed_Output(void)
 {
 
-    if (mode == OPEN_LOOP)
+    if (PID_mode == OPEN_LOOP)
     {
         speed_Output = speed_Target;
     }
-    else if (mode == PID_CLOSED_LOOP)
+    else if (PID_mode == PID_CLOSED_LOOP)
     {
         static int flag = 3;
         flag--;
@@ -142,7 +173,7 @@ void Cal_Speed_Output(uint8 mode)
             speed_Output = speed_Output + delta_Speed;
         }
     }
-    else if (mode == FUZZY_PID_CLOSED_LOOP)
+    else if (PID_mode == FUZZY_PID_CLOSED_LOOP)
     {
         speed_Output = fuzzy_pid_control(speed_Measured, speed_Target, pid_vector[0]);
     }
