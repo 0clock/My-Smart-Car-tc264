@@ -91,6 +91,7 @@ public class WhiteBoard : MonoBehaviour
     float kp, ki, kd;
     float last_error, current_error;
 
+    int repeat_image_cnt = 0;
 
     // 启动函数，只会运行一次
     protected virtual void Start()
@@ -449,23 +450,31 @@ public class WhiteBoard : MonoBehaviour
                     ComputeHelper.CreateStructuredBuffer(ref picsBuffer, pics);
                     compute.SetBuffer(diffuseMapKernel, "pics", picsBuffer);//传入Compute Shader
 
-                    
-                    string path = @"D:\CarData\" + timeString + @" Images\";
-                    if (!Directory.Exists(path))
+                    if (repeat_image_cnt==0)
                     {
-                        Directory.CreateDirectory(path);
+                        string path = @"D:\CarData\" + timeString + @" Images\";
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+".pgm", FileMode.Create);
+                        byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"188 40\n"+"255\n");
+                        byte[] data2 = new byte[width * height];
+                        for (int i = 0; i < width * height; i++)
+                        {
+                            data2[i] = byteArray[i + index1 + 4];
+                        }
+                        fs.Write(data1, 0, data1.Length);
+                        fs.Write(data2, 0, data2.Length);
+                        fs.Flush();
+                        fs.Close();
                     }
-                    FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+".pgm", FileMode.Create);
-                    byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"188 40\n"+"255\n");
-                    byte[] data2 = new byte[width * height];
-                    for (int i = 0; i < width * height; i++)
+                    repeat_image_cnt = repeat_image_cnt + 1;
+                    if (repeat_image_cnt == 30)
                     {
-                        data2[i] = byteArray[i + index1 + 4];
+                        repeat_image_cnt = 0;
                     }
-                    fs.Write(data1, 0, data1.Length);
-                    fs.Write(data2, 0, data2.Length);
-                    fs.Flush();
-                    fs.Close();
+
                 }
             }
 
