@@ -1,4 +1,4 @@
-function [img_Processed] = ImageProcessing(img, cameraAlphaUpDown, cameraThetaDown, ratioOfMaxDisToHG, ratioOfPixelToHG)
+function [img_Processed] = ImageProcessing(img, cameraAlphaUpDown, cameraThetaDown, ratioOfMaxDisToHG, ratioOfPixelToHG, ratio)
 % 输入参数：
 % img：原始灰度图像矩阵
 % cameraAlphaUpDown：摄像机视野的上下张角（尽可能准确）
@@ -9,7 +9,7 @@ function [img_Processed] = ImageProcessing(img, cameraAlphaUpDown, cameraThetaDo
 % img_Processed：转换结果灰度图像矩阵，最底部中间代表摄像机的位置
     img = double(img);
     width = size(img,2);
-    height = size(img,1);
+    height = ratio.*size(img,1);
     cameraAlphaUpOrDown = cameraAlphaUpDown./2./180.*3.1415926;
     cameraThetaDown = cameraThetaDown./180.*3.1415926;
     width_Processed = round(2.*width./height.*tan(cameraAlphaUpOrDown)./cos(cameraThetaDown).*ratioOfMaxDisToHG./ratioOfPixelToHG);
@@ -25,7 +25,7 @@ function [img_Processed] = ImageProcessing(img, cameraAlphaUpDown, cameraThetaDo
                 x = x_Processed.*(height./2./tan(cameraAlphaUpOrDown).*sin(cameraThetaDown)-y.*cos(cameraThetaDown)).*ratioOfPixelToHG;
                 i = round(x + (1+width)./2);
                 if (i>0 && i<width+1)
-                    img_Processed(j_Processed,i_Processed) = img(j,i);
+                    img_Processed(j_Processed,i_Processed) = img(j/ratio,i);
                 end
             end
         end
