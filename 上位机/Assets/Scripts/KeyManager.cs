@@ -18,7 +18,7 @@ public class KeyManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (whiteBoard.key_Control == true)
+        /*if (whiteBoard.key_Control == true)
         {
             if (Input.GetKey(KeyCode.W))
             {
@@ -55,6 +55,45 @@ public class KeyManager : MonoBehaviour
                 whiteBoard.speed_Target = 0;
                 GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
             }
+            if (whiteBoard.steering_Target < 0.5 * b_Steering && whiteBoard.steering_Target > -0.5 * b_Steering)
+            {
+                whiteBoard.steering_Target = 0;
+                GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
+            }
+        }*/
+
+        if (whiteBoard.key_Control == true)
+        {
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                if (whiteBoard.speed_Target <7)
+                    whiteBoard.speed_Target += 1;
+                GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                if (whiteBoard.speed_Target > -7)
+                    whiteBoard.speed_Target -= 1;
+                GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
+            }
+            if (Input.GetKey(KeyCode.A))
+            {              
+                whiteBoard.steering_Target -= b_Steering;
+                GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                whiteBoard.steering_Target += b_Steering;
+                GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
+            }
+            if (Input.GetKey(KeyCode.P))
+            {
+                whiteBoard.speed_Target = 0;
+                GameObject.Find("UI/Canvas/Text (10)/Slider").GetComponent<Slider>().value = whiteBoard.speed_Target;
+            }
+
+            whiteBoard.steering_Target = whiteBoard.steering_Target - b_Steering * whiteBoard.steering_Target / (30 + b_Steering);
+            GameObject.Find("UI/Canvas/Text (11)/Slider").GetComponent<Slider>().value = whiteBoard.steering_Target;
             if (whiteBoard.steering_Target < 0.5 * b_Steering && whiteBoard.steering_Target > -0.5 * b_Steering)
             {
                 whiteBoard.steering_Target = 0;

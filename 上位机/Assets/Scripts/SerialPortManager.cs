@@ -17,8 +17,8 @@ public class SerialPortManager : MonoBehaviour
     Thread dataReceiveThread;
 
     public StringBuilder sb = new System.Text.StringBuilder();//用于存储一定长度的接收数据（字符串），这种字符串数据结构特点是速度快
-    public int receiveLength = (4+128*64+4 + 4+1+4 + 4+4+4 + 4+3+4 + 4+1+4 +4+6+4) * 2;//指定sb的字符串长度，等于所有命令长度的2倍时最好 
-    public int baseReceiveLength = (4 + 128 * 64 + 4 + 4 + 1 + 4 + 4 + 4 + 4 + 4 + 3 + 4 + 4 + 1 + 4 + 4 + 6 + 4) * 2;
+    public int receiveLength = (4+188*40+4 + 4+1+4 + 4+4+4 + 4+5+4 + 4+1+4 +4+6+4 + 4+6+4) * 2;//指定sb的字符串长度，等于所有命令长度的2倍时最好 
+    public int baseReceiveLength = (4 + 188 * 40 + 4 + 4 + 1 + 4 + 4 + 4 + 4 + 4 + 5 + 4 + 4 + 1 + 4 + 4 + 6 + 4 + 4 + 6 + 4) * 2;
     public bool flag = false;
 
     void Start()

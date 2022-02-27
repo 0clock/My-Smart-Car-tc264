@@ -26,9 +26,9 @@ public class WhiteBoard : MonoBehaviour
 
     [Header("Display Settings")]
     // 设置画面宽
-    public int width = 128;
+    public int width = 188;
     // 设置画面高
-    public int height = 64;
+    public int height = 40;
     // 设置每帧步长
     public int stepsPerFrame = 1;
     // 设置过滤模式
@@ -56,7 +56,7 @@ public class WhiteBoard : MonoBehaviour
     [SerializeField, HideInInspector] protected RenderTexture diffusedTrailMap3;
     [SerializeField, HideInInspector] protected RenderTexture displayTexture3;
 
-    Picture[] pics = new Picture[128 * 64];//用一个一维数组存储图片数据
+    Picture[] pics = new Picture[188 * 40];//用一个一维数组存储图片数据
     ComputeBuffer picsBuffer;//用于传递图片
     public SerialPortManager serialPortManager;//用于输入外部的串口实例
     string str;
@@ -67,12 +67,13 @@ public class WhiteBoard : MonoBehaviour
 
     float thresholdingValue = 0.25F;
 
-    float cameraAlphaUpOrDown = 30F * 3.1415926F / 2 / 180;//无需校正
+    float cameraAlphaUpOrDown = 40F * 3.1415926F / 2 / 180;//无需校正
     float cameraThetaDown = 16.4F * 3.1415926F / 180;//需要校正
     float ratioOfMaxDisToHG = 4F;//仅影响显示距离
     float ratioOfPixelToHG = 0.033F;//仅影响分辨率
     public int width_Inverse_Perspective;
     public int height_Inverse_Perspective;
+    int ratio = 2;
 
     float speed_Measured = 0;
     float speed_Output = 0;
@@ -85,9 +86,10 @@ public class WhiteBoard : MonoBehaviour
 
     public bool key_Control = true;
 
-    string timeString = DateTime.Now.ToString("hh-mm-ss");
+    string timeString = DateTime.Now.ToString("yyyy-MM-dd") +" "+ DateTime.Now.ToString("hh-mm-ss");
 
-    int kp, ki, kd;
+    float kp, ki, kd;
+    float last_error, current_error;
 
 
     // 启动函数，只会运行一次
@@ -130,7 +132,7 @@ public class WhiteBoard : MonoBehaviour
         compute.SetTexture(colourKernel, "TrailMap1", trailMap1);
    
 
-        width_Inverse_Perspective = (int)Math.Round(2 * ((float)width) / ((float)height) * Math.Tan(cameraAlphaUpOrDown) / Math.Cos(cameraThetaDown) * ratioOfMaxDisToHG / ratioOfPixelToHG);
+        width_Inverse_Perspective = (int)Math.Round(2 * ((float)width) / ((float)height*ratio) * Math.Tan(cameraAlphaUpOrDown) / Math.Cos(cameraThetaDown) * ratioOfMaxDisToHG / ratioOfPixelToHG);
         height_Inverse_Perspective = (int)Math.Round(ratioOfMaxDisToHG / ratioOfPixelToHG);
         GameObject.Find("UI/Canvas/Text (3)/InputField").GetComponent<InputField>().text = width_Inverse_Perspective.ToString();
         GameObject.Find("UI/Canvas/Text (3)/InputField (1)").GetComponent<InputField>().text = height_Inverse_Perspective.ToString();
@@ -164,6 +166,7 @@ public class WhiteBoard : MonoBehaviour
         compute.SetInt("numAgents", numAgents);
         compute.SetInt("width", width);
         compute.SetInt("height", height);
+        compute.SetInt("ratio", ratio);
 
         compute.SetInt("width_Inverse_Perspective", width_Inverse_Perspective);
         compute.SetInt("height_Inverse_Perspective", height_Inverse_Perspective);
@@ -206,8 +209,8 @@ public class WhiteBoard : MonoBehaviour
         compute.SetFloat("ratioOfPixelToHG", ratioOfPixelToHG);//将初始ratioOfPixelToHG输入Compute Shader
 
         Vector3 scale3;
-        scale3.x = 4;
-        scale3.y = (float)(height_Inverse_Perspective) / (height)/((float)(width_Inverse_Perspective) / (width) ) * 2;
+        scale3.x = 4.0f;
+        scale3.y = (float)(height_Inverse_Perspective)/((float)(width_Inverse_Perspective)) * scale3.x;
         scale3.z = 1;
         GameObject.Find("WhiteBoard/Quad2").transform.localScale = scale3;
         GameObject.Find("WhiteBoard/Quad3").transform.localScale = scale3;
@@ -271,7 +274,7 @@ public class WhiteBoard : MonoBehaviour
         UART_Flag_NO_IMAGE = GameObject.Find("UI/Canvas/Toggle").GetComponent<Toggle>().isOn ? 0 : 1;
         if (UART_Flag_NO_IMAGE == 1)
         {
-            serialPortManager.receiveLength = serialPortManager.baseReceiveLength - (4 + 128 * 64 + 4) * 2;
+            serialPortManager.receiveLength = serialPortManager.baseReceiveLength - (4 + 188 * 40+ 4) * 2;
         }
         else
         {
@@ -287,10 +290,10 @@ public class WhiteBoard : MonoBehaviour
         float ratioOfMaxDisToHG_temp = GameObject.Find("UI/Canvas/Text (6)/Slider").GetComponent<Slider>().value;
         float ratioOfPixelToHG_temp = GameObject.Find("UI/Canvas/Text (7)/Slider").GetComponent<Slider>().value;
 
-        int width_Inverse_Perspective_temp = (int)Math.Round(2 * ((float)width) / ((float)height) * Math.Tan(cameraAlphaUpOrDown_temp) / Math.Cos(cameraThetaDown_temp) * ratioOfMaxDisToHG_temp / ratioOfPixelToHG_temp);
+        int width_Inverse_Perspective_temp = (int)Math.Round(2 * ((float)width) / ((float)height*ratio) * Math.Tan(cameraAlphaUpOrDown_temp) / Math.Cos(cameraThetaDown_temp) * ratioOfMaxDisToHG_temp / ratioOfPixelToHG_temp);
         int height_Inverse_Perspective_temp = (int)Math.Round(ratioOfMaxDisToHG_temp / ratioOfPixelToHG_temp);
 
-        if (width_Inverse_Perspective_temp > 256 || height_Inverse_Perspective_temp > 256)
+        if (width_Inverse_Perspective_temp > 1024 || height_Inverse_Perspective_temp > 1024)
         {
             GameObject.Find("UI/Canvas/Text (4)/Slider").GetComponent<Slider>().value = 2 * 180 * cameraAlphaUpOrDown / 3.1415926F;//将Slider的值赋值为cameraAlphaUpOrDown
             GameObject.Find("UI/Canvas/Text (5)/Slider").GetComponent<Slider>().value = 180 * cameraThetaDown / 3.1415926F;//将Slider的值赋值为cameraThetaDown
@@ -313,7 +316,7 @@ public class WhiteBoard : MonoBehaviour
         GameObject.Find("UI/Canvas/Text (6)/InputField").GetComponent<InputField>().text = ratioOfMaxDisToHG.ToString();
         GameObject.Find("UI/Canvas/Text (7)/InputField").GetComponent<InputField>().text = ratioOfPixelToHG.ToString();
 
-        width_Inverse_Perspective = (int)Math.Round(2 * ((float)width) / ((float)height) * Math.Tan(cameraAlphaUpOrDown) / Math.Cos(cameraThetaDown) * ratioOfMaxDisToHG / ratioOfPixelToHG);
+        width_Inverse_Perspective = (int)Math.Round(2 * ((float)width) / ((float)height*ratio) * Math.Tan(cameraAlphaUpOrDown) / Math.Cos(cameraThetaDown) * ratioOfMaxDisToHG / ratioOfPixelToHG);
         height_Inverse_Perspective = (int)Math.Round(ratioOfMaxDisToHG / ratioOfPixelToHG);
 
         GameObject.Find("UI/Canvas/Text (3)/InputField").GetComponent<InputField>().text = width_Inverse_Perspective.ToString();
@@ -345,8 +348,8 @@ public class WhiteBoard : MonoBehaviour
         compute.SetInt("height_Inverse_Perspective", height_Inverse_Perspective);
 
         Vector3 scale3;
-        scale3.x = 4;
-        scale3.y = (float)(height_Inverse_Perspective) / (height) / ((float)(width_Inverse_Perspective) / (width)) * 2;
+        scale3.x = 4.0f;
+        scale3.y = (float)(height_Inverse_Perspective) / ((float)(width_Inverse_Perspective)) * scale3.x;
         scale3.z = 1;
         GameObject.Find("WhiteBoard/Quad2").transform.localScale = scale3;
         GameObject.Find("WhiteBoard/Quad3").transform.localScale = scale3;
@@ -365,11 +368,11 @@ public class WhiteBoard : MonoBehaviour
 
         key_Control = GameObject.Find("UI/Canvas/Toggle (1)").GetComponent<Toggle>().isOn;
 
-        kp = (int)GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value;
+        kp = GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (12)/InputField").GetComponent<InputField>().text = kp.ToString();
-        ki = (int)GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value;
+        ki = GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (13)/InputField").GetComponent<InputField>().text = ki.ToString();
-        kd = (int)GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value;
+        kd = GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (14)/InputField").GetComponent<InputField>().text = kd.ToString();
 
         //...
@@ -398,12 +401,17 @@ public class WhiteBoard : MonoBehaviour
             Debug.Log(BitConverter.ToString(byteArray_Send));
 
             //发送速度参数，数据头00-FF-04-01，数据长度1字节，数据尾00-FF-04-02
-            byteArray_Send = new byte[] { 0x00, 0xFF, 0x04, 0x01, (byte)(Math.Round((speed_Target - (-3)) / (3 - (-3)) * 255)), 0x00, 0xFF, 0x04, 0x02 };
+            byteArray_Send = new byte[] { 0x00, 0xFF, 0x04, 0x01, (byte)(Math.Round((speed_Target - (-7)) / (7 - (-7)) * 255)), 0x00, 0xFF, 0x04, 0x02 };
             serialPortManager.WriteByte(byteArray_Send);
             Debug.Log(BitConverter.ToString(byteArray_Send));
 
             //发送舵机参数，数据头00-FF-05-01，数据长度1字节，数据尾00-FF-05-02
             byteArray_Send = new byte[] { 0x00, 0xFF, 0x05, 0x01, (byte)(Math.Round((steering_Target - (-30)) / (30 - (-30)) * 255)), 0x00, 0xFF, 0x05, 0x02 };
+            serialPortManager.WriteByte(byteArray_Send);
+            Debug.Log(BitConverter.ToString(byteArray_Send));
+
+            //发送PID参数，数据头00-FF-07-01，数据长度6字节，数据尾00-FF-07-02
+            byteArray_Send = new byte[] { 0x00, 0xFF, 0x07, 0x01, (byte)(((Int16)(Math.Round(kp*1000)))>>8), (byte)(((Int16)(Math.Round(kp * 1000)))), (byte)(((Int16)(Math.Round(ki * 1000))) >> 8), (byte)(((Int16)(Math.Round(ki * 1000)))), (byte)(((Int16)(Math.Round(kd * 1000))) >> 8), (byte)(((Int16)(Math.Round(kd * 1000)))), 0x00, 0xFF, 0x07, 0x02 };
             serialPortManager.WriteByte(byteArray_Send);
             Debug.Log(BitConverter.ToString(byteArray_Send));
 
@@ -428,7 +436,7 @@ public class WhiteBoard : MonoBehaviour
             if (index1 != -1)
             {
                 index2 = (str.Substring(index1*3,str.Length-1-index1*3)).IndexOf("00-FF-01-02")/3;//找到最后一个数据头（也就是第二个数据头） 
-                if (index2 <= 4 + width * height  && index2 >= 4 + 100)//检测两个数据头之间是否有正确的字节数目
+                if (index2 == 4 + width * height)//检测两个数据头之间是否有正确的字节数目
                 {
                     for (int i = 0; i < width * height; i++)
                     {
@@ -448,7 +456,7 @@ public class WhiteBoard : MonoBehaviour
                         Directory.CreateDirectory(path);
                     }
                     FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+".pgm", FileMode.Create);
-                    byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"128 64\n"+"255\n");
+                    byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"188 40\n"+"255\n");
                     byte[] data2 = new byte[width * height];
                     for (int i = 0; i < width * height; i++)
                     {
@@ -503,12 +511,12 @@ public class WhiteBoard : MonoBehaviour
                     compute.SetFloat("ratioOfPixelToHG", ratioOfPixelToHG);//更新Compute Shader
                 }
             }
-            //接收速度参数，数据头00-FF-04-01，数据长度3字节，数据尾00-FF-04-02
+            //接收速度参数，数据头00-FF-04-01，数据长度5字节，数据尾00-FF-04-02
             index1 = str.IndexOf("00-FF-04-01") / 3;//找到第一个数据头
             if (index1 != -1)
             {
                 index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-04-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
-                if (index2 == 4 + 3)//检测两个数据头之间是否有正确的字节数目
+                if (index2 == 4 + 5)//检测两个数据头之间是否有正确的字节数目
                 {
                     int value = byteArray[index1 + 4];
                     GameObject.Find("UI/Canvas/Text (9)/Slider").GetComponent<Slider>().value = (float)value / 256 * (7-(-7))+(-7);
@@ -517,6 +525,11 @@ public class WhiteBoard : MonoBehaviour
                     value = byteArray[index1 + 5];
                     GameObject.Find("UI/Canvas/Text (15)/Slider").GetComponent<Slider>().value = (float)value / 256 * (7 - (-7)) + (-7);
                     speed_Output = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
+
+                    value = byteArray[index1 + 7];
+                    last_error = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
+                    value = byteArray[index1 + 8];
+                    current_error = (float)value / 256 * (7 - (-7)) + (-7);//更新Slider的值，赋值
 
                     string path = @"D:\CarData\" + timeString + @" Others\";
                     if (!Directory.Exists(path))
@@ -531,6 +544,12 @@ public class WhiteBoard : MonoBehaviour
 
                     fs = new FileStream(path + "speed_Output.txt", FileMode.Append);
                     data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + speed_Output.ToString() + "\r\n");
+                    fs.Write(data, 0, data.Length);
+                    fs.Flush();
+                    fs.Close();
+
+                    fs = new FileStream(path + "error.txt", FileMode.Append);
+                    data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + last_error.ToString() +','+ current_error.ToString() + "\r\n");
                     fs.Write(data, 0, data.Length);
                     fs.Flush();
                     fs.Close();
@@ -563,43 +582,43 @@ public class WhiteBoard : MonoBehaviour
                     steering_Target = (float)value / 256 * (30 - (-30)) + (-30);//更新Slider的值，赋值为二值化阈值
                 }
             }
-            //接收模糊pid参数，数据头00-FF-06-01，数据长度6字节，数据尾00-FF-06-02
-            index1 = str.IndexOf("00-FF-06-01") / 3;//找到第一个数据头
+            //接收pid参数，数据头00-FF-07-01，数据长度6字节，数据尾00-FF-07-02
+            index1 = str.IndexOf("00-FF-07-01") / 3;//找到第一个数据头
             if (index1 != -1)
             {
-                index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-06-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
-                if (index2 == 4 + 6)//检测两个数据头之间是否有正确的字节数目
+                index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-07-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
+                if (index2 == 4 + 6 && reading_Flag == true)//检测两个数据头之间是否有正确的字节数目
                 {
                     int value = byteArray[index1 + 4]*256+ byteArray[index1 + 5];
                     if (value > 32767)
                     {
                         value = value - 65536;
                     }
-                    GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value = value;
-                    kp = value;//更新Slider的值，赋值
+                    GameObject.Find("UI/Canvas/Text (12)/Slider").GetComponent<Slider>().value = value/1000.0f;
+                    kp = value/1000.0f;//更新Slider的值，赋值
 
                     value = byteArray[index1 + 6] * 256 + byteArray[index1 + 7];
                     if (value > 32767)
                     {
                         value = value - 65536;
                     }
-                    GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value = value;
-                    ki = value;//更新Slider的值，赋值
+                    GameObject.Find("UI/Canvas/Text (13)/Slider").GetComponent<Slider>().value = value / 1000.0f;
+                    ki = value / 1000.0f;//更新Slider的值，赋值
 
                     value = byteArray[index1 + 8] * 256 + byteArray[index1 + 9];
                     if (value > 32767)
                     {
                         value = value - 65536;
                     }
-                    GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value = value;
-                    kd = value;//更新Slider的值，赋值
+                    GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value = value / 1000.0f;
+                    kd = value / 1000.0f;//更新Slider的值，赋值
 
                     string path = @"D:\CarData\" + timeString + @" Others\";
                     if (!Directory.Exists(path))
                     {
                         Directory.CreateDirectory(path);
                     }
-                    FileStream fs = new FileStream(path + "fuzzy_PID.txt", FileMode.Append);
+                    FileStream fs = new FileStream(path + "PID.txt", FileMode.Append);
                     byte[] data = Encoding.UTF8.GetBytes(Time.fixedTime.ToString() + "," + kp.ToString()+ "," + ki.ToString()+ "," + kd.ToString() + "\r\n");
                     fs.Write(data, 0, data.Length);
                     fs.Flush();

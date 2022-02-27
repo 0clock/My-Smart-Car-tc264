@@ -21,6 +21,7 @@ float time;
 int width_Choice;
 int width_Inverse_Perspective;
 int height_Inverse_Perspective;
+int ratio;
 
 // 哈希函数（ www.cs.ubc.ca/~rbridson/docs/schechter-sca08-turbulence.pdf），输入uint数，输出一个一一对应但几乎随机的uint数
 uint hash(uint state)
@@ -99,16 +100,16 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 		Pos.x = (id.x + id.y * (uint)width) % (uint)width_Inverse_Perspective;
 		Pos.y = (id.x + id.y * (uint)width) / (uint)width_Inverse_Perspective;		
 		float y_Processed = (float)Pos.y;
-		float y = tan(cameraThetaDown) * ((float)height) / 2 / tan(cameraAlphaUpOrDown) - ((float)height) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
-		int j = round(-y + ((float)height-1) / 2);
-		if (j >= 0 && j < height)
+		float y = tan(cameraThetaDown) * ((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown) - ((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
+		int j = round(-y + ((float)height*ratio-1) / 2);
+		if (j >= 0 && j < height*ratio)
 		{
 			float x_Processed = ((float)Pos.x - ((float)width_Inverse_Perspective - 1) / 2);
-			float x = x_Processed*(((float)height) / 2 / tan(cameraAlphaUpOrDown)*sin(cameraThetaDown) - y*cos(cameraThetaDown))*ratioOfPixelToHG;
+			float x = x_Processed*(((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown)*sin(cameraThetaDown) - y*cos(cameraThetaDown))*ratioOfPixelToHG;
 			int i = round(x + ((float)width-1) / 2);
 			if (i >= 0 && i < width)
 			{
-				uint index = i + j * (uint)width;
+				uint index = i + j/ratio * (uint)width;
 				DiffusedTrailMap2[Pos] = pics[index].value / pics[index].maxvalue;
 				DiffusedTrailMap3[Pos] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;
 			}
@@ -127,16 +128,16 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 	else if (width_Choice == 1)
 	{
 		float y_Processed = (float)id.y;
-		float y = tan(cameraThetaDown) * ((float)height) / 2 / tan(cameraAlphaUpOrDown) - ((float)height) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
-		int j = round(-y + ((float)height - 1) / 2);
-		if (j >= 0 && j < height)
+		float y = tan(cameraThetaDown) * ((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown) - ((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown) / (y_Processed * ratioOfPixelToHG);
+		int j = round(-y + ((float)height*ratio - 1) / 2);
+		if (j >= 0 && j < height*ratio)
 		{
 			float x_Processed = ((float)id.x - ((float)width_Inverse_Perspective - 1) / 2);
-			float x = x_Processed * (((float)height) / 2 / tan(cameraAlphaUpOrDown) * sin(cameraThetaDown) - y * cos(cameraThetaDown)) * ratioOfPixelToHG;
+			float x = x_Processed * (((float)height*ratio) / 2 / tan(cameraAlphaUpOrDown) * sin(cameraThetaDown) - y * cos(cameraThetaDown)) * ratioOfPixelToHG;
 			int i = round(x + ((float)width - 1) / 2);
 			if (i >= 0 && i < width)
 			{
-				uint index = i + j * (uint)width;
+				uint index = i + j/ratio * (uint)width;
 				DiffusedTrailMap2[id.xy] = pics[index].value / pics[index].maxvalue;
 				DiffusedTrailMap3[id.xy] = (pics[index].value / pics[index].maxvalue) > thresholdingValue;
 			}
