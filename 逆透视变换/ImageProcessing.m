@@ -25,7 +25,7 @@ function [img_Processed] = ImageProcessing(img, cameraAlphaUpDown, cameraThetaDo
                 x = x_Processed.*(height./2./tan(cameraAlphaUpOrDown).*sin(cameraThetaDown)-y.*cos(cameraThetaDown)).*ratioOfPixelToHG;
                 i = round(x + (1+width)./2);
                 if (i>0 && i<width+1)
-                    img_Processed(j_Processed,i_Processed) = img(j/ratio,i);
+                    img_Processed(j_Processed,i_Processed) = img(floor(j/ratio),i);
                 end
             end
         end
