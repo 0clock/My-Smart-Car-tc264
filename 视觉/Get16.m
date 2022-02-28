@@ -16,8 +16,8 @@ function arg = Get16(image)
     black_cnt = zeros(1,16);
     for i = 1:height
         for j = 1:width
-            white_cnt(3*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -3) = (image(i,j)==1) + white_cnt(3*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -3);
-            black_cnt(3*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -3) = (image(i,j)==0) + black_cnt(3*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -3);
+            white_cnt(4*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -4) = (image(i,j)==1) + white_cnt(4*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -4);
+            black_cnt(4*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -4) = (image(i,j)==0) + black_cnt(4*ceil(i/row_edge(2)) + ceil(j/col_edge(2)) -4);
         end
     end
     for i = 1:16
