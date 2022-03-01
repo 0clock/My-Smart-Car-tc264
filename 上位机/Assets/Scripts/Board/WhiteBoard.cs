@@ -68,9 +68,9 @@ public class WhiteBoard : MonoBehaviour
     float thresholdingValue = 0.25F;
 
     float cameraAlphaUpOrDown = 40F * 3.1415926F / 2 / 180;//无需校正
-    float cameraThetaDown = 16.4F * 3.1415926F / 180;//需要校正
-    float ratioOfMaxDisToHG = 4F;//仅影响显示距离
-    float ratioOfPixelToHG = 0.033F;//仅影响分辨率
+    float cameraThetaDown = 27.89191F * 3.1415926F / 180;//需要校正
+    float ratioOfMaxDisToHG = 5.915322F;//仅影响显示距离
+    float ratioOfPixelToHG = 0.1F;//仅影响分辨率
     public int width_Inverse_Perspective;
     public int height_Inverse_Perspective;
     int ratio = 2;
@@ -92,6 +92,9 @@ public class WhiteBoard : MonoBehaviour
     float last_error, current_error;
 
     int repeat_image_cnt = 0;
+
+    int classification_Result=0;
+    string[] class_Name_Group = {"未知", "左弯", "右弯", "发现右环岛", "右环岛中心", "入右环岛", "出右环岛", "三岔路口", "发现左环岛", "左环岛中心", "入左环岛", "出左环岛", "十字路口"};
 
     // 启动函数，只会运行一次
     protected virtual void Start()
@@ -236,6 +239,9 @@ public class WhiteBoard : MonoBehaviour
         GameObject.Find("UI/Canvas/Text (13)/InputField").GetComponent<InputField>().text = ki.ToString();
         GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value = kd;//将Slider的值赋值为kd
         GameObject.Find("UI/Canvas/Text (14)/InputField").GetComponent<InputField>().text = kd.ToString();
+
+        GameObject.Find("UI/Canvas/Text (8)/InputField").GetComponent<InputField>().text = class_Name_Group[classification_Result];//将Slider的值赋值为 class_Name_Group[classification_Result]
+
     }
 
     // 循环函数，会反复运行
@@ -376,6 +382,8 @@ public class WhiteBoard : MonoBehaviour
         kd = GameObject.Find("UI/Canvas/Text (14)/Slider").GetComponent<Slider>().value;
         GameObject.Find("UI/Canvas/Text (14)/InputField").GetComponent<InputField>().text = kd.ToString();
 
+        GameObject.Find("UI/Canvas/Text (8)/InputField").GetComponent<InputField>().text = class_Name_Group[classification_Result];
+
         //...
 
 
@@ -431,7 +439,19 @@ public class WhiteBoard : MonoBehaviour
 
             Debug.Log(str);
 
-            //这个图像是一直更新，不需要用户发起读取请求
+            //一直更新，不需要用户发起读取请求
+            //接收分类参数，数据头00-FF-08-01，数据长度1字节，数据尾00-FF-08-02
+            index1 = str.IndexOf("00-FF-08-01") / 3;//找到第一个数据头
+            if (index1 != -1)
+            {
+                index2 = (str.Substring(index1 * 3, str.Length - 1 - index1 * 3)).IndexOf("00-FF-08-02") / 3;//找到最后一个数据头（也就是第二个数据头） 
+                if (index2 == 4 + 1)//检测两个数据头之间是否有正确的字节数目
+                {
+                    int value = byteArray[index1 + 4];
+                    GameObject.Find("UI/Canvas/Text (8)/InputField").GetComponent<InputField>().text = class_Name_Group[value];
+                    classification_Result = value;
+                }
+            }
             //接收图片，数据头00-FF-01-01，数据长度width * height字节，数据尾00-FF-01-02
             index1 = str.IndexOf("00-FF-01-01")/3;//找到第一个数据头
             if (index1 != -1)
@@ -457,7 +477,7 @@ public class WhiteBoard : MonoBehaviour
                         {
                             Directory.CreateDirectory(path);
                         }
-                        FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+".pgm", FileMode.Create);
+                        FileStream fs = new FileStream(path+ Time.fixedTime.ToString()+class_Name_Group[classification_Result]+".pgm", FileMode.Create);
                         byte[] data1 = Encoding.UTF8.GetBytes("P5\n"+"188 40\n"+"255\n");
                         byte[] data2 = new byte[width * height];
                         for (int i = 0; i < width * height; i++)
@@ -635,6 +655,7 @@ public class WhiteBoard : MonoBehaviour
 
                 }
             }
+            
             //...
 
             serialPortManager.flag = false;
