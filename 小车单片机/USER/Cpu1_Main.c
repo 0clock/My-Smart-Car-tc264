@@ -59,6 +59,7 @@ void core1_main(void)
             }
             Get_Thresholding_Image();
             Get_Inverse_Perspective_Image();
+            Classification();
         }
 
         //由处理后的图像等信息，获取速度、转向角度的目标值

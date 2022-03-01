@@ -50,6 +50,9 @@ void UART(enum UARTstate state)
             //发送增量式PID参数，数据头00-FF-07-01，数据长度6字节，数据尾00-FF-07-02
             UART_PID();
 
+            //发送分类结果，数据头00-FF-08-01，数据长度1字节，数据尾00-FF-08-02
+            UART_Classification();
+
 
             UART_Flag_TX = FALSE;
         }
