@@ -1,9 +1,7 @@
 function [is_Straight] = CheckStraightV2(image)
     search_Lines = 20;
     
-    start_Row = size(image,1);
-    real_Start_Row = 1;
-    
+    start_Row = size(image,1);    
     start_Col = [ceil(size(image,2)/2),ceil(size(image,2)/2)];
     Col_Left = -2*ones(1,search_Lines);
     Col_Right = -2*ones(1,search_Lines);
@@ -17,8 +15,8 @@ function [is_Straight] = CheckStraightV2(image)
             while image(start_Row,start_Col(1)) == 1 && start_Col(1)>=1+1
                 start_Col(1) = start_Col(1) - 1;
             end
-            if image(start_Row,start_Col(1)) == 0
-                start_Col(1) = start_Col(1) + 1;
+            start_Col(1) = start_Col(1) + 1;
+            if image(start_Row,start_Col(1)-1) == 0               
                 Col_Left(i) = start_Col(1);
             end
         else
@@ -41,8 +39,8 @@ function [is_Straight] = CheckStraightV2(image)
             while image(start_Row,start_Col(2)) == 1 && start_Col(2)<=size(image,2)-1
                 start_Col(2) = start_Col(2) + 1;
             end
-            if image(start_Row,start_Col(2)) == 0
-                start_Col(2) = start_Col(2) - 1;
+            start_Col(2) = start_Col(2) - 1;
+            if image(start_Row,start_Col(2)+1) == 0             
                 Col_Right(i) = start_Col(2);
             end
         end
