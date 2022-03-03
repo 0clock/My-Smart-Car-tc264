@@ -94,7 +94,7 @@ public class WhiteBoard : MonoBehaviour
     int repeat_image_cnt = 0;
 
     int classification_Result=0;
-    string[] class_Name_Group = {"未知", "左弯", "右弯", "发现右环岛", "右环岛中心", "入右环岛", "出右环岛", "三岔路口", "发现左环岛", "左环岛中心", "入左环岛", "出左环岛", "十字路口"};
+    string[] class_Name_Group = {"左弯", "右弯", "发现右环岛", "右环岛中心", "入右环岛", "出右环岛", "三岔路口", "发现左环岛", "左环岛中心", "入左环岛", "出左环岛", "十字路口","直道"};
 
     // 启动函数，只会运行一次
     protected virtual void Start()
