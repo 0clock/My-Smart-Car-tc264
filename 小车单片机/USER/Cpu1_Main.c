@@ -53,13 +53,21 @@ void core1_main(void)
         {
             Get_Cutted_Image();//裁剪图像到188*40
             mt9v03x_finish_flag = 0;//表示可以更新mt9v03x_image了
+
+            Get_Thresholding_Image();
+            Get_Inverse_Perspective_Image();
+            if (Check_Straight())
+            {
+                classification_Result = 12;
+            }
+            else
+            {
+                classification_Result = Classification();
+            }
             if (UART_EN == TRUE)
             {
                 UART_Flag_TX = TRUE;
             }
-            Get_Thresholding_Image();
-            Get_Inverse_Perspective_Image();
-            Classification();
         }
 
         //由处理后的图像等信息，获取速度、转向角度的目标值

@@ -26,6 +26,9 @@ void UART(enum UARTstate state)
         //通过串口发送数据给上位机
         if (UART_Flag_TX == TRUE || UART_Flag_NO_IMAGE == TRUE)
         {
+            //发送分类结果，数据头00-FF-08-01，数据长度1字节，数据尾00-FF-08-02
+            UART_Classification();
+
             if (UART_Flag_NO_IMAGE == FALSE)
             {
                 //发送裁剪后的摄像头原画面，数据头00-FF-01-01，数据长度X_WIDTH_CAMERA*Y_WIDTH_CAMERA字节，数据尾00-FF-01-02
@@ -50,8 +53,7 @@ void UART(enum UARTstate state)
             //发送增量式PID参数，数据头00-FF-07-01，数据长度6字节，数据尾00-FF-07-02
             UART_PID();
 
-            //发送分类结果，数据头00-FF-08-01，数据长度1字节，数据尾00-FF-08-02
-            UART_Classification();
+
 
 
             UART_Flag_TX = FALSE;

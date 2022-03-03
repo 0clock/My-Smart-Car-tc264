@@ -38,7 +38,7 @@ float BayesTable[13][CLASS_NUM] = {{-1.190,-3.034,-2.802,-6.263,-0.934,-4.668,1.
 {118.385,115.730,115.069,120.424,138.194,110.731,109.583,114.231,117.511,121.156,111.660,115.457},
 {115.730,118.385,114.231,117.511,121.156,111.660,109.583,115.069,120.424,138.194,110.731,115.457},
 {-114.584,-114.584,-127.289,-139.810,-154.666,-118.157,-123.839,-127.289,-139.810,-154.666,-118.157,-139.937}};
-char *class_Name_Group[CLASS_NUM] = {"左弯", "右弯", "发现右环岛", "右环岛中心", "入右环岛", "出右环岛", "三岔路口", "发现左环岛", "左环岛中心", "入左环岛", "出左环岛", "十字路口"};
+char *class_Name_Group[CLASS_NUM+1] = {"左弯", "右弯", "发现右环岛", "右环岛中心", "入右环岛", "出右环岛", "三岔路口", "发现左环岛", "左环岛中心", "入左环岛", "出左环岛", "十字路口","直道"};
 
 
 void My_Init_Camera(void)
@@ -219,12 +219,12 @@ void Get_Thresholding_Image(void)
     {
         for (int i = 2;i<KMEANS_K;i++)
         {
-            if (m[i][1]>max_cnt[0])
+            if (m[i][1]>max_cnt[0] && m[i][0]<GOD_LIGHT)
             {
                 max_cnt[0] = m[i][1];
                 max_cnt_class[0] = i;
             }
-            else if (m[i][1]>max_cnt[1])
+            else if (m[i][1]>max_cnt[1] && m[i][0]<GOD_LIGHT)
             {
                 max_cnt[1] = m[i][1];
                 max_cnt_class[1] = i;
@@ -235,12 +235,12 @@ void Get_Thresholding_Image(void)
     {
         for (int i = 2;i<KMEANS_K;i++)
         {
-            if (m[i][1]>max_cnt[1])
+            if (m[i][1]>max_cnt[1] && m[i][0]<GOD_LIGHT)
             {
                 max_cnt[1] = m[i][1];
                 max_cnt_class[1] = i;
             }
-            else if (m[i][1]>max_cnt[0])
+            else if (m[i][1]>max_cnt[0] && m[i][0]<GOD_LIGHT)
             {
                 max_cnt[0] = m[i][1];
                 max_cnt_class[0] = i;
@@ -334,37 +334,153 @@ void Get16(float* arg)
     }
 }
 
-void Classification(void)
+uint8 Classification(void)
 {
     float arg_Classification[16];
     Get16(arg_Classification);
     float classification_Data[CLASS_NUM] = {0};
     float classification_Data_max;
+    uint8 classification_Result_temp;
     for (uint8 i = 0;i<CLASS_NUM;i++)
     {
-        classification_Data[i] = arg_Classification[1]*BayesTable[1][i]+
+        classification_Data[i] = arg_Classification[0]*BayesTable[0][i]+
+                                arg_Classification[1]*BayesTable[1][i]+
                                 arg_Classification[2]*BayesTable[2][i]+
                                 arg_Classification[3]*BayesTable[3][i]+
                                 arg_Classification[4]*BayesTable[4][i]+
                                 arg_Classification[5]*BayesTable[5][i]+
                                 arg_Classification[6]*BayesTable[6][i]+
                                 arg_Classification[7]*BayesTable[7][i]+
-                                arg_Classification[8]*BayesTable[8][i]+
+                                arg_Classification[9]*BayesTable[8][i]+
                                 arg_Classification[10]*BayesTable[9][i]+
-                                arg_Classification[11]*BayesTable[10][i]+
+                                arg_Classification[13]*BayesTable[10][i]+
                                 arg_Classification[14]*BayesTable[11][i]+
-                                arg_Classification[15]*BayesTable[12][i]+
-                                BayesTable[13][i];
-        if (i==1)
+                                BayesTable[12][i];
+        if (i==0)
         {
-            classification_Data_max = classification_Data[1];
-            classification_Result = 1;
+            classification_Data_max = classification_Data[0];
+            classification_Result_temp = 0;
         }
         else if (classification_Data[i]>classification_Data_max)
         {
             classification_Data_max = classification_Data[i];
-            classification_Result = i;
+            classification_Result_temp = i;
         }
     }
+    return classification_Result_temp;
 }
 
+
+int Check_Straight(void)
+{
+    int start_Row = height_Inverse_Perspective-1;
+    int start_Col[2] = {width_Inverse_Perspective/2,width_Inverse_Perspective/2};
+    int Col_Left[SEARCH_LINES] = {-2};
+    int Col_Right[SEARCH_LINES] = {-2};
+    for (int i=0;i<SEARCH_LINES;i++)
+    {
+        Col_Left[i] = -2;
+        Col_Right[i] = -2;
+    }
+    for (int i=0;i<SEARCH_LINES;i++)
+    {
+        if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 255 || mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] == 255)
+        {
+            start_Row = start_Row - 1;
+            continue;
+        }
+        if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 1)
+        {
+            while (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 1 && start_Col[0]>=1)
+            {
+                start_Col[0] = start_Col[0] - 1;
+            }
+            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 0)
+            {
+                start_Col[0] = start_Col[0] + 1;
+                Col_Left[i] = start_Col[0];
+            }
+        }
+        else
+        {
+           while (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] != 1 && start_Col[0]<=width_Inverse_Perspective-2)
+            {
+                start_Col[0] = start_Col[0] + 1;
+            }
+           if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 1)
+           {
+                Col_Left[i] = start_Col[0];
+           }
+        }
+        if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] != 1)
+        {
+            while (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] != 1 && start_Col[1]>=1)
+            {
+                start_Col[1] = start_Col[1] - 1;
+            }
+            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] == 1)
+            {
+                Col_Right[i] = start_Col[1];
+            }
+        }
+        else
+        {
+            while (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] == 1 && start_Col[1]<=width_Inverse_Perspective-2)
+            {
+                start_Col[1] = start_Col[1] + 1;
+            }
+            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] == 0)
+            {
+                start_Col[1] = start_Col[1] - 1;
+                Col_Right[i] = start_Col[1];
+            }
+        }
+        start_Row = start_Row - 1;
+    }
+
+    int max_Col_Left = 0;
+    int min_Col_Left = width_Inverse_Perspective;
+    int detect_Left = 0;
+    int max_Col_Right = 0;
+    int min_Col_Right = width_Inverse_Perspective;
+    int detect_Right = 0;
+    for (int i=0;i<SEARCH_LINES;i++)
+    {
+        if (Col_Left[i] != -2)
+        {
+            detect_Left = 1;
+            if (Col_Left[i] > max_Col_Left)
+            {
+                max_Col_Left = Col_Left[i];
+            }
+            if (Col_Left[i] < min_Col_Left)
+            {
+                min_Col_Left = Col_Left[i];
+            }
+        }
+        else if (detect_Left == 1)
+        {
+            return 0;
+        }
+
+        if (Col_Right[i] != -2)
+        {
+            detect_Right = 1;
+            if (Col_Right[i] > max_Col_Right)
+            {
+                max_Col_Right = Col_Right[i];
+            }
+            if (Col_Right[i] < min_Col_Right)
+            {
+                min_Col_Right = Col_Right[i];
+            }
+        }
+        else if (detect_Right == 1)
+        {
+            return 0;
+        }
+    }
+    return ((max_Col_Left - min_Col_Left <= STRAIGHT_CONDITION && max_Col_Left >= min_Col_Left)
+            && (max_Col_Right - min_Col_Right <= STRAIGHT_CONDITION && max_Col_Right >= min_Col_Right)
+            && max_Col_Left < min_Col_Right);
+}

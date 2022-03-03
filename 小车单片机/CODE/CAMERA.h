@@ -10,6 +10,10 @@
 #define CLASS_NUM 12
 
 #define KMEANS_K 3
+#define GOD_LIGHT 205
+
+#define SEARCH_LINES 25
+#define STRAIGHT_CONDITION 5
 
 extern uint8 mt9v03x_image[MT9V03X_H][MT9V03X_W];
 extern uint8 mt9v03x_image_cutted[Y_WIDTH_CAMERA][X_WIDTH_CAMERA];
@@ -32,7 +36,8 @@ void Set_CameraAlphaUpOrDown(uint8 val);
 void Set_CameraThetaDown(uint8 val);
 void Set_RatioOfMaxDisToHG(uint8 val);
 void Set_RatioOfPixelToHG(uint8 val);
-void Classification(void);
+uint8 Classification(void);
+int Check_Straight(void);
 
 
 
