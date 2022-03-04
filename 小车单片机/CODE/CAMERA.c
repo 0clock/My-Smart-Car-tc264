@@ -395,9 +395,9 @@ int Check_Straight(void)
             {
                 start_Col[0] = start_Col[0] - 1;
             }
-            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]] == 0)
+            start_Col[0] = start_Col[0] + 1;
+            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[0]-1] == 0)
             {
-                start_Col[0] = start_Col[0] + 1;
                 Col_Left[i] = start_Col[0];
             }
         }
@@ -429,9 +429,9 @@ int Check_Straight(void)
             {
                 start_Col[1] = start_Col[1] + 1;
             }
-            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]] == 0)
+            start_Col[1] = start_Col[1] - 1;
+            if (mt9v03x_image_cutted_thresholding_inversePerspective[start_Row][start_Col[1]+1] == 0)
             {
-                start_Col[1] = start_Col[1] - 1;
                 Col_Right[i] = start_Col[1];
             }
         }
