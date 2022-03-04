@@ -1,8 +1,8 @@
 function [image_withLine] = DrawCenterLine(class_Name,image)
 % 找中心线算法，输入赛道类型class_Name和逆透视二值化图片image，输出绘制有左线、右线、中心线的逆透视二值化图片image_withLine
     image_withLine = image;
-    % 对于左弯、右弯、出左环岛、出右环岛，可以采用，特征是滤波是负数，用于超前转向，以免冲出弯道
-    if strcmp(class_Name,'左弯') || strcmp(class_Name,'右弯') || strcmp(class_Name,'出左环岛') || strcmp(class_Name,'出右环岛')
+    % 对于左弯、右弯，可以采用，特征是滤波是负数，用于超前转向，以免冲出弯道
+    if strcmp(class_Name,'左弯') || strcmp(class_Name,'右弯') 
         filter = -0.5;%滤波系数，正数时是低通滤波，负数时相当于高通滤波
         search_Lines = size(image,1);%一共要扫描多少行，最大是图片宽
         
@@ -106,8 +106,8 @@ function [image_withLine] = DrawCenterLine(class_Name,image)
                 end
             end            
         end
-    % 对于十字路口，可以采用，特征是滤波是较大正数，用于避免中心线有过大的波动
-    elseif strcmp(class_Name,'十字路口')
+    % 对于十字路口、直道，可以采用，特征是滤波是较大正数，用于避免中心线有过大的波动
+    elseif strcmp(class_Name,'十字路口') || strcmp(class_Name,'直道')
         filter = 0.7;%滤波系数，正数时是低通滤波，负数时相当于高通滤波
         search_Lines = size(image,1);%一共要扫描多少行，最大是图片宽
         

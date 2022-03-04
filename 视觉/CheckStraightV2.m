@@ -72,8 +72,8 @@ function [is_Straight] = CheckStraightV2(image)
             if Col_Right(i)>max_Col_Right
                 max_Col_Right = Col_Right(i);
             end
-            if Col_Right(i)<max_Col_Right
-                max_Col_Right = Col_Right(i);
+            if Col_Right(i)<min_Col_Right
+                min_Col_Right = Col_Right(i);
             end
         elseif detect_Right == 1
             is_Straight = 0;
