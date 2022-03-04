@@ -2,7 +2,7 @@
 #include "STEERING.h"
 
 //需要串口通信传过来的变量（必须配以执行变量更新的函数）
-float steering_Target = 0;//目标角度（°），更新函数Set_Steering_Target(uint8 val)
+float steering_Target = 0;//目标角度（°），更新函数Set_Steering_Target(uint8 val)（范围-30，30）
 
 
 void My_Init_Steering(void)

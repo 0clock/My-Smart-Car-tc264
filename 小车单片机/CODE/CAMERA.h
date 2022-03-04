@@ -2,7 +2,7 @@
 #define __CAMERA_h__
 
 #define Y_WIDTH_CAMERA 40
-#define X_WIDTH_CAMERA 188
+#define X_WIDTH_CAMERA 187
 
 #define width_Inverse_Perspective_Max 256
 #define height_Inverse_Perspective_Max 256
@@ -12,7 +12,7 @@
 #define KMEANS_K 3
 #define GOD_LIGHT 205
 
-#define SEARCH_LINES 25
+#define SEARCH_LINES 20
 #define STRAIGHT_CONDITION 5
 
 extern uint8 mt9v03x_image[MT9V03X_H][MT9V03X_W];
