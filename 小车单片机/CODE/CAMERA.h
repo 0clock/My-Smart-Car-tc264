@@ -12,7 +12,7 @@
 #define KMEANS_K 3
 #define GOD_LIGHT 205
 
-#define SEARCH_LINES 20
+#define SEARCH_LINES_STRAIGHT 20
 #define STRAIGHT_CONDITION 5
 
 extern uint8 mt9v03x_image[MT9V03X_H][MT9V03X_W];
@@ -24,6 +24,9 @@ extern float cameraThetaDown;//需要校正
 extern float ratioOfMaxDisToHG;//仅影响显示距离
 extern float ratioOfPixelToHG;//仅影响分辨率
 extern uint8 classification_Result;
+
+extern float Col_Center[height_Inverse_Perspective_Max];//按从下往上的顺序存储中心线线的列号结果，不合法的全部为-2
+extern int search_Lines;
 
 void My_Init_Camera(void);
 
@@ -38,6 +41,9 @@ void Set_RatioOfMaxDisToHG(uint8 val);
 void Set_RatioOfPixelToHG(uint8 val);
 uint8 Classification(void);
 int Check_Straight(void);
+void DrawCenterLine(void);
+void DrawCenterLinewithConfig(float filter);
+
 
 
 

@@ -44,3 +44,13 @@ void Set_Steering(void)
     }
     pwm_duty(ATOM2_CH0_P33_10, (uint32)(1500+(steering_Target<0?1:-1)*duty));
 }
+
+void Cal_Steering_Error(void)
+{
+    //根据Col_Center和扫描范围search_Lines计算误差（全局变量，待定义），待完成
+}
+
+void Cal_Steering_Target(void)
+{
+    //待完成，由误差（全局变量，待定义）根据位置式PD原理求转向目标Steering_Target(范围-30~30，负数左转，正数右转)
+}

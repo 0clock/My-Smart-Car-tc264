@@ -32,6 +32,8 @@ void Get_Speed_perSPEED_MEASURING_PERIOD_ms(void);
 //void Get_Speed(void);
 void Cal_Speed_Output(void);
 void Set_Speed(void);
+void Cal_Speed_Target(void);
+
 
 
 #endif

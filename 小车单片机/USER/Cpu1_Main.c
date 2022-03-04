@@ -64,6 +64,7 @@ void core1_main(void)
             {
                 classification_Result = Classification();
             }
+            DrawCenterLine();
             if (UART_EN == TRUE)
             {
                 UART_Flag_TX = TRUE;
@@ -71,6 +72,8 @@ void core1_main(void)
         }
 
         //由处理后的图像等信息，获取速度、转向角度的目标值
+        Cal_Steering_Error();//根据Col_Center和扫描范围search_Lines计算误差（全局变量，待定义），待完成
+        Cal_Speed_Target();//根据Col_Center和扫描范围search_Lines计算速度目标speed_Target，待完成
 
         //低速目标且低速时，开环
         if (speed_Target < 0.5 && speed_Target > -0.5 && speed_Measured < 0.5 && speed_Measured > -0.5)

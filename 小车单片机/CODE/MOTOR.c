@@ -197,4 +197,9 @@ void Set_Speed(void)
     pwm_duty(ATOM0_CH6_P23_1, (uint32)(5000-(speed_Output>0?1:(-1))*duty));
 }
 
+void Cal_Speed_Target(void)
+{
+    ;//根据Col_Center和扫描范围search_Lines计算速度目标speed_Target，待完成
+}
+
 

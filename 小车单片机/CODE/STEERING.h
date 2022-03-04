@@ -12,6 +12,9 @@ void UART_Steering(void);
 void Set_Steering_Target(uint8 val);
 
 void Set_Steering(void);
+void Cal_Steering_Error(void);
+void Cal_Steering_Target(void);
+
 
 
 
