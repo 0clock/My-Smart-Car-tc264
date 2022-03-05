@@ -52,6 +52,9 @@ function [image_withLine,Col_Center,search_Lines] = DrawCenterLine(class_Name,im
             start_Row = start_Row - 1; %左右线扫描完毕，标记行进入上一行，给下一次左右线扫描做准备
             
             %下面是中心线计算   
+            if start_Col(1)>start_Col(2)
+                continue;
+            end
             %中心线计算有4种情况：左线合法(~=-2)或非法(==-2)）、右线合法(~=-2)或非法(==-2)）
             if Col_Right(i)~=-2 && Col_Left(i)~= -2 %左线合法，右线合法
                 if Col_Center(i-1)~=-2 %如果上一个中心线也合法
@@ -157,6 +160,9 @@ function [image_withLine,Col_Center,search_Lines] = DrawCenterLine(class_Name,im
             start_Row = start_Row - 1; %左右线扫描完毕，标记行进入上一行，给下一次左右线扫描做准备
             
             %下面是中心线计算   
+            if start_Col(1)>start_Col(2)
+                continue;
+            end
             %中心线计算有4种情况：左线合法(~=-2)或非法(==-2)）、右线合法(~=-2)或非法(==-2)）
             if Col_Right(i)~=-2 && Col_Left(i)~= -2 %左线合法，右线合法
                 if Col_Center(i-1)~=-2 %如果上一个中心线也合法
