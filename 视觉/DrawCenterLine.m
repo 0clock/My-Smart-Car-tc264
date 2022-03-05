@@ -1,4 +1,4 @@
-function [image_withLine] = DrawCenterLine(class_Name,image)
+function [image_withLine,Col_Center,search_Lines] = DrawCenterLine(class_Name,image)
 % 找中心线算法，输入赛道类型class_Name和逆透视二值化图片image，输出绘制有左线、右线、中心线的逆透视二值化图片image_withLine
     image_withLine = image;
     % 对于左弯、右弯，可以采用，特征是滤波是负数，用于超前转向，以免冲出弯道
