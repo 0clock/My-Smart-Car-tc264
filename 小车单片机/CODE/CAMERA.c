@@ -492,7 +492,7 @@ int Check_Straight(void)
 
 void DrawCenterLine(void)
 {
-    search_Lines = height_Inverse_Perspective;//一共要扫描多少行，最大是图片宽
+    search_Lines = ((int)(height_Inverse_Perspective/(10.0f*ratioOfPixelToHG)));//一共要扫描多少行，最大是图片宽
 
     // 对于左弯、右弯，可以采用，特征是滤波是负数，用于超前转向，以免冲出弯道
     if (strcmp(class_Name_Group[classification_Result],"左弯") || strcmp(class_Name_Group[classification_Result],"右弯"))

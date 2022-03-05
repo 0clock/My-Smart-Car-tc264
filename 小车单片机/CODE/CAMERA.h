@@ -12,7 +12,7 @@
 #define KMEANS_K 3
 #define GOD_LIGHT 205
 
-#define SEARCH_LINES_STRAIGHT 20
+#define SEARCH_LINES_STRAIGHT ((int)(20/(10.0f*ratioOfPixelToHG))) //表示直线扫描范围为车前2.0倍摄像头高度
 #define STRAIGHT_CONDITION 5
 
 extern uint8 mt9v03x_image[MT9V03X_H][MT9V03X_W];
